@@ -211,6 +211,7 @@ def setup_screen(fullscreen):
 	screen = None
 	if fullscreen:
 		screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
+		pygame.mouse.set_visible(False)
 	else:
 		screen = pygame.display.set_mode(size)
 
@@ -332,6 +333,7 @@ def drawGauge(scr, x, y, r, label, value):
 	lens = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images', 'lens.png'))
 	lens = lens.convert_alpha()
 	lens = pygame.transform.scale(lens, (2*(r-line_width), 2*(r-line_width)))
+	#lens = pygame.transform.scale(lens, (2*(r), 2*(r)))
 	scr.blit( lens, (x-r,y-r) )
 
 def drawBattery(scr, fill_ratio):
@@ -368,12 +370,21 @@ def drawBattery(scr, fill_ratio):
 	
 def drawRPM(scr, rpm):
 
+	# f = 32
+	# r = 144
+	# o = 2038
+	
+	if rpm > 1.0:
+		speed = (32.0/144.0)*rpm*2.038*(60.0/1000.0)
+	else:
+		speed = 0.0
+	
 	fill_gradient(scr, (50, 50, 50), (0,0,0) )
 
 	# Figure out position by rendering ...
 	
-	draw_shadow_text(scr, rpm, 100, (510, 120), True)
-	draw_shadow_text(scr, "RPM", 50, (520, 150))
+	draw_shadow_text(scr, "%.0f" % speed, 100, (510, 120), True)
+	draw_shadow_text(scr, "km/h", 50, (520, 150))
 	
 
 def run_can(infile, replay_mode, objects):
@@ -423,7 +434,7 @@ def run(infile, replay_mode, fullscreen):
 	t.start()
 
 	while not shutdown.is_set():
-		drawRPM(screen, str(objects[0].actual_speed))
+		drawRPM(screen, objects[0].actual_speed)
 		drawBattery(screen, objects[0].dc_capacitor_voltage/170.0)
 		drawGauge(screen, 240, 330, 40, "°C Ctrl", objects[1].controller_temp/200.0)
 		drawGauge(screen, 340, 330, 40, "A RMS", objects[0].motor_rms_current/200.0)
@@ -451,6 +462,7 @@ def exit_handler(sig, frame):
 	global shutdown
 	print("Caught Ctrl-C, will exit")
 	shutdown.set()
+	pygame.mouse.set_visible(True)
 	sys.exit(1)
 
 if __name__ == "__main__":
