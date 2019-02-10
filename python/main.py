@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 import signal
 import argparse
 import re
@@ -14,8 +15,10 @@ import pygame.gfxdraw
 
 import scipy as sc
 from threading import Thread
+from threading import Event
 
 screen = None
+shutdown = Event()
 
 tsparser = re.compile(r"\(([0-9]*.[0-9]*)\)")
 	
@@ -33,7 +36,7 @@ class Msg_1a6(object):
 	def parse(self, data):
 				
 		self.motor_rms_current = parse_unsigned_int(data, 0, 16)/10.0
-		self. actual_speed = parse_signed_int(data, 16, 16)
+		self.actual_speed = parse_signed_int(data, 16, 16)
 		self.battery_current = parse_signed_int(data, 32, 16)/10.0		
 		self.dc_capacitor_voltage = (parse_unsigned_int(data, 48, 16)/64.0)
 
@@ -260,15 +263,20 @@ def fill_gradient(surface, color, gradient, rect=None, vertical=True, forward=Tr
 			)
 			fn_line(surface, color, (col,y1), (col,y2))
 
-def draw_shadow_text(scr, text, size, pos):
+def draw_shadow_text(scr, text, size, pos, topright=False):
 
-	tfont = pygame.font.SysFont(None, size)
+	tfont = pygame.font.SysFont("Noto Mono", size)
 
 	text_color = (255, 255, 255)
 	drop_color = (100, 100, 100)
 	dropshadow_offset = size // 25
 
 	text_bitmap = tfont.render(text, True, drop_color)
+	if topright:
+		rect = text_bitmap.get_rect()
+		rect.topright = pos
+		pos = rect
+		
 	scr.blit(text_bitmap, (pos[0]+dropshadow_offset, pos[1]+dropshadow_offset) )
 
 	text_bitmap = tfont.render(text, 1, text_color)
@@ -278,6 +286,8 @@ def rotate(points, center, radians):
     return sc.dot(points - center, sc.array([[sc.cos(radians), sc.sin(radians)], [-sc.sin(radians), sc.cos(radians)]])) + center
 
 def drawGauge(scr, x, y, r, label, value):
+	
+	global shutdown
 	
 	line_color = (230,230,230)
 	bg_color = (0,0,0)
@@ -295,7 +305,7 @@ def drawGauge(scr, x, y, r, label, value):
 	pygame.gfxdraw.filled_circle(scr, x, y, r-line_width, bg_color)
 
 	# Draw label in the gauge
-	tfont = pygame.font.SysFont(None, int(r/2.5))
+	tfont = pygame.font.SysFont("Noto Mono", int(r/4))
 	bitmap = tfont.render(label, 1, (255,255,255))
 	textpos = bitmap.get_rect()
 	textpos.centerx = x
@@ -311,12 +321,18 @@ def drawGauge(scr, x, y, r, label, value):
 	triag = [ (int(x), int(y)) for (x,y) in triag ]
 	pygame.gfxdraw.aatrigon(scr, triag[0][0], triag[0][1], triag[1][0], triag[1][1], triag[2][0], triag[2][1], (255,0,0))
 	pygame.gfxdraw.filled_trigon(scr, triag[0][0], triag[0][1], triag[1][0], triag[1][1], triag[2][0], triag[2][1], (255,0,0))
+	pygame.gfxdraw.aapolygon(scr, [(triag[1][0], triag[1][1]), (triag[0][0], triag[0][1]), (triag[1][0], triag[1][1])], (100,100,100))
 
 	# Draw needle center
 	pygame.gfxdraw.aacircle(scr, x, y, 3, line_color)
 	pygame.gfxdraw.filled_circle(scr, x, y, 3, line_color)
 	
-
+	# Load lens
+	
+	lens = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images', 'lens.png'))
+	lens = lens.convert_alpha()
+	lens = pygame.transform.scale(lens, (2*(r-line_width), 2*(r-line_width)))
+	scr.blit( lens, (x-r,y-r) )
 
 def drawBattery(scr, fill_ratio):
 	
@@ -327,9 +343,9 @@ def drawBattery(scr, fill_ratio):
 		color_fill = (255, 255, 255)
 		
 	x = 50
-	y = 330
-	width = 50
-	height = 100
+	y = 50
+	width = 70
+	height = 380
 	line_width = 2
 	
 	spacing = 1
@@ -352,26 +368,24 @@ def drawBattery(scr, fill_ratio):
 	
 def drawRPM(scr, rpm):
 
-	fill_gradient(scr, (75, 75, 75), (0,0,0) )
+	fill_gradient(scr, (50, 50, 50), (0,0,0) )
 
 	# Figure out position by rendering ...
-	myfont = pygame.font.SysFont(None, 100)
-	valuelbl = myfont.render(rpm, 1, (255,255,255))
-	textpos = valuelbl.get_rect()
-	textpos.bottomright = (scr.get_rect().centerx, scr.get_rect().centery)
 	
-	unitpos =  (textpos[0] + textpos[2] + 10, textpos[1] + textpos[3] - 55) # A bit of trial and error to position the seconds
-
+	draw_shadow_text(scr, rpm, 100, (510, 120), True)
+	draw_shadow_text(scr, "RPM", 50, (520, 150))
 	
-	draw_shadow_text(scr, rpm, 100, textpos.topleft)
-	draw_shadow_text(scr, "RPM", 50, unitpos)
-	
-	# Update the display (i.e. show the output of the above!)
-	#pygame.display.flip()
 
 def run_can(infile, replay_mode, objects):
+	global shutdown
+	
 	prev_time = -1
 	for line in infile:
+		
+		if shutdown.is_set():
+			sys.exit(1)
+			return
+		
 		# Remove endings and ignore empty/comment rows
 		l = line.strip()
 		if len(l) == 0 or l.startswith("#") or not l.startswith("("):
@@ -398,7 +412,8 @@ def run_can(infile, replay_mode, objects):
 		
 def run(infile, replay_mode, fullscreen):
 	
-	shutdown = False
+	global shutdown
+	
 	screen = setup_screen(fullscreen)
 	pygame.init()
 	
@@ -407,12 +422,14 @@ def run(infile, replay_mode, fullscreen):
 	t = Thread(target=run_can, args=(infile, replay_mode, objects, ))
 	t.start()
 
-	while not shutdown:
+	while not shutdown.is_set():
 		drawRPM(screen, str(objects[0].actual_speed))
 		drawBattery(screen, objects[0].dc_capacitor_voltage/170.0)
-		drawGauge(screen, 300, 390, 40, "A - RMS", objects[0].motor_rms_current/200.0)
-		drawGauge(screen, 400, 390, 40, "kW", objects[1].motor_power/70.0)
-		drawGauge(screen, 500, 390, 40, "A - Battery", objects[0].battery_current/200.0)
+		drawGauge(screen, 240, 330, 40, "°C Ctrl", objects[1].controller_temp/200.0)
+		drawGauge(screen, 340, 330, 40, "A RMS", objects[0].motor_rms_current/200.0)
+		drawGauge(screen, 460, 330, 60, "kW", objects[1].motor_power/70.0)
+		drawGauge(screen, 580, 330, 40, "A Batt", objects[0].battery_current/200.0)
+		drawGauge(screen, 680, 330, 40, "°C Motor", objects[1].motor_temp/200.0)
 		
 		pygame.display.flip()
 
@@ -431,7 +448,9 @@ def run(infile, replay_mode, fullscreen):
 		time.sleep(0.1)
 
 def exit_handler(sig, frame):
+	global shutdown
 	print("Caught Ctrl-C, will exit")
+	shutdown.set()
 	sys.exit(1)
 
 if __name__ == "__main__":
