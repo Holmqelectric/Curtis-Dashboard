@@ -330,10 +330,10 @@ def drawGauge(scr, x, y, r, label, value):
 	
 	# Load lens
 	
-	lens = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images', 'lens.png'))
+	lens = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images', 'ring2.png'))
 	lens = lens.convert_alpha()
-	lens = pygame.transform.scale(lens, (2*(r-line_width), 2*(r-line_width)))
-	#lens = pygame.transform.scale(lens, (2*(r), 2*(r)))
+	#lens = pygame.transform.scale(lens, (2*(r-line_width), 2*(r-line_width)))
+	lens = pygame.transform.scale(lens, (2*(r), 2*(r)))
 	scr.blit( lens, (x-r,y-r) )
 
 def drawBattery(scr, fill_ratio):
