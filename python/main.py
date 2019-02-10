@@ -10,11 +10,16 @@ import time
 import struct
 
 import pygame
+import pygame.gfxdraw
+
+import scipy as sc
+from threading import Thread
 
 screen = None
-rpm = -1
 
 tsparser = re.compile(r"\(([0-9]*.[0-9]*)\)")
+	
+
 
 class Msg_1a6(object):
 	
@@ -159,31 +164,34 @@ def parse_signed_int(data, start, length):
 	
 	return signed_val
 	
-def parse_can_data(data):
-	global rpm
+def parse_can_data(objects, data):
 	
 	sbytes = data.split("#")
 	
 	if data.startswith("1A6"):
-		m1a6 = Msg_1a6()
+		m1a6 = objects[0]
 		m1a6.parse(sbytes[1])
 		print(m1a6)
-		rpm = m1a6.actual_speed
+		return m1a6
 		
 	elif data.startswith("2A6"): 
-		m2a6 = Msg_2a6()
+		m2a6 = objects[1]
 		m2a6.parse(sbytes[1])
 		print(m2a6)
+		return m2a6
 		
 	elif data.startswith("3A6"): 
-		m3a6 = Msg_3a6()
+		m3a6 = objects[2]
 		m3a6.parse(sbytes[1])
 		print(m3a6)
+		return m3a6
 		
 	elif data.startswith("4A6"): 
-		m4a6 = Msg_4a6()
+		m4a6 = objects[3]
 		m4a6.parse(sbytes[1])
 		print(m4a6)
+		return m4a6
+
 	elif data.startswith("726"): 
 		print("")
 		print("---------------------------")
@@ -191,11 +199,10 @@ def parse_can_data(data):
 	else:
 		print("UNKNOWN CAN DATA")
 
-
+	return None
+	
 def setup_screen(fullscreen):
 	
-	global screen
-
 	size = (800,480)
 
 	screen = None
@@ -210,7 +217,8 @@ def setup_screen(fullscreen):
 	# Stop keys repeating (not so necessary for this script, but useful if you want to capture other key presses)
 	pygame.key.set_repeat()
 
-
+	return screen
+	
 def fill_gradient(surface, color, gradient, rect=None, vertical=True, forward=True):
 	"""fill a surface with a gradient pattern
 	Parameters:
@@ -266,11 +274,84 @@ def draw_shadow_text(scr, text, size, pos):
 	text_bitmap = tfont.render(text, 1, text_color)
 	scr.blit(text_bitmap, pos )
 
+def rotate(points, center, radians):
+    return sc.dot(points - center, sc.array([[sc.cos(radians), sc.sin(radians)], [-sc.sin(radians), sc.cos(radians)]])) + center
 
+def drawGauge(scr, x, y, r, label, value):
+	
+	line_color = (230,230,230)
+	bg_color = (0,0,0)
+	line_width = 2
+	
+	if value < 0.0:
+		value = 0.0
+	
+	# Draw the gauge background and outline
+	pygame.gfxdraw.aacircle(scr, x, y, r+line_width, bg_color)
+	pygame.gfxdraw.filled_circle(scr, x, y, r+line_width, bg_color)
+	pygame.gfxdraw.aacircle(scr, x, y, r, line_color)
+	pygame.gfxdraw.filled_circle(scr, x, y, r, line_color)
+	pygame.gfxdraw.aacircle(scr, x, y, r-line_width, bg_color)
+	pygame.gfxdraw.filled_circle(scr, x, y, r-line_width, bg_color)
+
+	# Draw label in the gauge
+	tfont = pygame.font.SysFont(None, int(r/2.5))
+	bitmap = tfont.render(label, 1, (255,255,255))
+	textpos = bitmap.get_rect()
+	textpos.centerx = x
+	textpos.centery = y + r/2
+	scr.blit(bitmap, textpos )
+	
+	# Rotate needle	
+	ang = 4.5*sc.pi/4.0 - value*(5.0*sc.pi/4.0)
+	triag = sc.array([[x,y-2], [x+r-5, y], [x,y+2]])
+	triag = rotate(triag, sc.array([x, y]), -ang)
+	
+	# Draw needle
+	triag = [ (int(x), int(y)) for (x,y) in triag ]
+	pygame.gfxdraw.aatrigon(scr, triag[0][0], triag[0][1], triag[1][0], triag[1][1], triag[2][0], triag[2][1], (255,0,0))
+	pygame.gfxdraw.filled_trigon(scr, triag[0][0], triag[0][1], triag[1][0], triag[1][1], triag[2][0], triag[2][1], (255,0,0))
+
+	# Draw needle center
+	pygame.gfxdraw.aacircle(scr, x, y, 3, line_color)
+	pygame.gfxdraw.filled_circle(scr, x, y, 3, line_color)
+	
+
+
+def drawBattery(scr, fill_ratio):
+	
+	color_outline = (255, 255, 255)
+	if fill_ratio < 0.2:
+		color_fill = (255, 0, 0)
+	else:
+		color_fill = (255, 255, 255)
+		
+	x = 50
+	y = 330
+	width = 50
+	height = 100
+	line_width = 2
+	
+	spacing = 1
+	
+	# Draw battery outline
+	pygame.draw.rect(scr, color_outline, [x, y, width, height], line_width)
+	
+	# Draw battery knob
+	pygame.draw.rect(scr, color_outline, [x + (width/2) - 4*line_width, y - (4*line_width), 8*line_width, 4*line_width], line_width)
+	 
+	# Draw battery fill level
+	loffset = spacing + line_width
+	roffset = spacing + 2*line_width
+	fill_max_height = (height - roffset)
+	fill_height = fill_max_height*fill_ratio
+	fill_width = width - roffset
+	
+	pygame.draw.rect(scr, color_fill, [x + loffset, y + loffset + fill_max_height*(1.0 - fill_ratio), fill_width, fill_height])
+
+	
 def drawRPM(scr, rpm):
 
-	# Fill the screen with a black background
-	#scr.fill((0,0,0))
 	fill_gradient(scr, (75, 75, 75), (0,0,0) )
 
 	# Figure out position by rendering ...
@@ -286,18 +367,10 @@ def drawRPM(scr, rpm):
 	draw_shadow_text(scr, "RPM", 50, unitpos)
 	
 	# Update the display (i.e. show the output of the above!)
-	pygame.display.flip()
-		
-def run(infile, replay_mode, fullscreen):
-	
-	global screen, rpm
-	
-	setup_screen(fullscreen)
-	pygame.init()
-	
-	
+	#pygame.display.flip()
+
+def run_can(infile, replay_mode, objects):
 	prev_time = -1
-	
 	for line in infile:
 		# Remove endings and ignore empty/comment rows
 		l = line.strip()
@@ -310,11 +383,39 @@ def run(infile, replay_mode, fullscreen):
 		
 		if replay_mode and prev_time == -1:
 			prev_time = get_timestamp(row[0])
+		
+		parse_can_data(objects, row[2])
 
+		timestamp = get_timestamp(row[0])
+
+		# Slow down iteration if in replay mode
+		if replay_mode:
+			sleeptime = timestamp - prev_time
+			time.sleep(sleeptime)
 		
-		#print(dt.datetime.fromtimestamp(timestamp), row[2])
-		parse_can_data(row[2])
+		prev_time = timestamp
 		
+		
+def run(infile, replay_mode, fullscreen):
+	
+	shutdown = False
+	screen = setup_screen(fullscreen)
+	pygame.init()
+	
+	objects = [Msg_1a6(), Msg_2a6(), Msg_3a6(), Msg_4a6()]
+
+	t = Thread(target=run_can, args=(infile, replay_mode, objects, ))
+	t.start()
+
+	while not shutdown:
+		drawRPM(screen, str(objects[0].actual_speed))
+		drawBattery(screen, objects[0].dc_capacitor_voltage/170.0)
+		drawGauge(screen, 300, 390, 40, "A - RMS", objects[0].motor_rms_current/200.0)
+		drawGauge(screen, 400, 390, 40, "kW", objects[1].motor_power/70.0)
+		drawGauge(screen, 500, 390, 40, "A - Battery", objects[0].battery_current/200.0)
+		
+		pygame.display.flip()
+
 		# Check screen events
 		for event in pygame.event.get():
 
@@ -327,20 +428,7 @@ def run(infile, replay_mode, fullscreen):
 				if (event.key == pygame.K_q):
 					exit_handler(None, None)
 
-
-		drawRPM(screen, str(rpm))
-
-
-		timestamp = get_timestamp(row[0])
-
-		# Slow down iteration if in replay mode
-		if replay_mode:
-			sleeptime = timestamp - prev_time
-			time.sleep(sleeptime)
-		
-		prev_time = timestamp
-		
-		#print("---------------------------")
+		time.sleep(0.1)
 
 def exit_handler(sig, frame):
 	print("Caught Ctrl-C, will exit")
