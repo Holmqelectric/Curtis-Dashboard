@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+import os
 
 import pygame
 import pygame.gfxdraw
@@ -35,20 +36,13 @@ class FlukeGUI(BaseGUI):
 		else:
 			color_fill = (255, 255, 255)
 
-		x = 50
-		y = 50
-		width = 70
-		height = 380
+		x = 683
+		y = 90
+		width = 100
+		height = 240
 		line_width = 2
 
 		spacing = 1
-
-		# Draw battery outline
-		pygame.draw.rect(self.screen, color_outline, [x, y, width, height], line_width)
-
-		# Draw battery knob
-		pygame.draw.rect(self.screen, color_outline,
-			[x + (width / 2) - 4*line_width, y - (4*line_width), 8*line_width, 4*line_width], line_width)
 
 		# Draw battery fill level
 		loffset = spacing + line_width
@@ -64,20 +58,24 @@ class FlukeGUI(BaseGUI):
 
 		speed = self.objects[0].get_speed()
 
-		self.fill_gradient(self.screen, (100, 100, 100), (80, 80, 80))
+		self.draw_shadow_text(self.screen, "%.0f" % speed, 100, FONT_NAME, (480, 120), True)
 
-		self.draw_shadow_text(self.screen, "%.0f" % speed, 100, FONT_NAME, (510, 120), True)
-		self.draw_shadow_text(self.screen, "km/h", 50, FONT_NAME, (520, 150))
+	def draw_background(self):
+		bg = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'background.png'))
+		bg = bg.convert_alpha()
+		bg = pygame.transform.scale(bg, (800, 480))
+		self.screen.blit(bg, (0,0))
 
 	def run(self):
 		while not self.shutdown.is_set():
+			self.draw_background()
 			self.draw_speed()
 			self.draw_battery()
-			self.draw_gauge(240, 330, 40, "Ctrl. Temp", self.objects[1].controller_temp, "°C")
-			self.draw_gauge(340, 330, 40, "RMS Amps", self.objects[0].motor_rms_current, "A")
-			self.draw_gauge(460, 330, 60, "Power", self.objects[1].motor_power, "kW")
-			self.draw_gauge(580, 330, 40, "Batt. Amps", self.objects[0].battery_current, "A")
-			self.draw_gauge(680, 330, 40, "Motor Temp", self.objects[1].motor_temp, "°C")
+			self.draw_gauge(240, 380, 40, "Ctrl. Temp", self.objects[1].controller_temp, "°C")
+			self.draw_gauge(340, 380, 40, "RMS Amps", self.objects[0].motor_rms_current, "A")
+			self.draw_gauge(460, 380, 60, "Power", self.objects[1].motor_power, "kW")
+			self.draw_gauge(580, 380, 40, "Batt. Amps", self.objects[0].battery_current, "A")
+			self.draw_gauge(680, 380, 40, "Motor Temp", self.objects[1].motor_temp, "°C")
 
 			pygame.display.flip()
 
