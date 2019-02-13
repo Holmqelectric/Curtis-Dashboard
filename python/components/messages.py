@@ -28,7 +28,12 @@ def parse_signed_int(data, start, length):
 
 
 class Msg_1a6(object):
-
+	
+	# ("Motor Cogwheel Diameter" / "Rear Wheel Diameter") * 
+	#   "Rear Wheel Circumfence" * 
+	#   ("Minutes in an hour" / "Meters in a kilometer")
+	GEARBOX_AND_WHEEL_RATIO = (32.0 / 144.0) * 2.038 * (60.0 / 1000.0)
+	
 	def __init__(self):
 		self.motor_rms_current = 0
 		self.actual_speed = 0
@@ -42,10 +47,10 @@ class Msg_1a6(object):
 		self.dc_capacitor_voltage = (parse_unsigned_int(data, 48, 16) / 64.0)
 
 	def __str__(self):
-		s1 = "           RMS Current: % .01f" % (self.motor_rms_current)
-		s2 = "          Actual Speed: % 3d" % (self.actual_speed)
-		s3 = "       Battery Current: % .01f" % (self.battery_current)
-		s4 = "  DC Capacitor Voltage: % .01f" % (self.dc_capacitor_voltage)
+		s1 = "%25s: % .01f" % ("RMS Current", self.motor_rms_current)
+		s2 = "%25s: % 3d" % ("Actual Speed", self.actual_speed)
+		s3 = "%25s: % .01f" % ("Battery Current", self.battery_current)
+		s4 = "%25s: % .01f" % ("DC Capacitor Voltage", self.dc_capacitor_voltage)
 
 		return "\n".join([s1, s2, s3, s4])
 
@@ -53,14 +58,17 @@ class Msg_1a6(object):
 		rpm = self.actual_speed
 
 		if rpm > 1.0:
-			speed = (32.0 / 144.0) * rpm * 2.038 * (60.0 / 1000.0)
+			speed = self.GEARBOX_AND_WHEEL_RATIO * rpm
 		else:
 			speed = 0.0
 
 		return speed
 
 class Msg_2a6(object):
-
+	STATES = ["Open", "Precharge", "Weld Check", "Closing Delay", "Missing Check", 
+	"Closed (When Main Enable = On)", "Delay", "Arc Check", "Open Delay", "Fault", 
+	"Closed (When Main Enable = Off)"]
+			
 	def __init__(self):
 
 		self.motor_temp = 0
@@ -75,40 +83,20 @@ class Msg_2a6(object):
 		self.controller_temp = parse_signed_int(data, 16, 16) / 10.0
 
 		state = parse_unsigned_int(data, 32, 8)
-		if state == 0:
-			self.sstate = "Open"
-		elif state == 1:
-			self.sstate = "Precharge"
-		elif state == 2:
-			self.sstate = "Weld Check"
-		elif state == 3:
-			self.sstate = "Closing Delay"
-		elif state == 4:
-			self.sstate = "Missing Check"
-		elif state == 5:
-			self.sstate = "Closed (When Main Enable = On)"
-		elif state == 6:
-			self.sstate = "Delay"
-		elif state == 7:
-			self.sstate = "Arc Check"
-		elif state == 8:
-			self.sstate = "Open Delay"
-		elif state == 9:
-			self.sstate = "Fault"
-		elif state == 10:
-			self.sstate = "Closed (When Main Enable = Off)"
+		if state >= len(self.STATES):
+			self.sstate = "Unknown State! " + str(state)			
 		else:
-			self.sstate = "Unknown State! " + str(state)
+			self.sstate = self.STATES[state]
 
 		self.status = parse_unsigned_int(data, 40, 8)
 		self.motor_power = parse_signed_int(data, 48, 16)
 
 	def __str__(self):
-		s1 = "     Motor Temperature: % .01f" % (self.motor_temp)
-		s2 = "Controller Temperature: % .01f" % (self.controller_temp)
-		s3 = "                 State:  %s" % (self.sstate)
-		s4 = "                Status: % d" % (self.status)
-		s5 = "           Motor Power: % d" % (self.motor_power)
+		s1 = "%25s: % .01f" % ("Motor Temperature", self.motor_temp)
+		s2 = "%25s: % .01f" % ("Controller Temperature", self.controller_temp)
+		s3 = "%25s:  %s" % ("State", self.sstate)
+		s4 = "%25s: % d" % ("Status", self.status)
+		s5 = "%25s: % d" % ("Motor Power", self.motor_power)
 
 		return "\n".join([s1, s2, s3, s4, s5])
 
@@ -126,9 +114,9 @@ class Msg_3a6(object):
 		self.odometer = parse_unsigned_int(data, 32, 32) / 10.0
 
 	def __str__(self):
-		s1 = "            Error Code: % d" % (self.error_code)
-		s2 = "  Vehicle Acceleration: % .03f" % (self.vehicle_acc)
-		s3 = "              Odometer: % .01f" % (self.odometer)
+		s1 = "%25s: % d" % ("Error Code", self.error_code)
+		s2 = "%25s: % .03f" % ("Vehicle Acceleration", self.vehicle_acc)
+		s3 = "%25s: % .01f" % ("Odometer", self.odometer)
 
 		return "\n".join([s1, s2, s3])
 
@@ -144,8 +132,8 @@ class Msg_4a6(object):
 		self.tts_2 = parse_signed_int(data, 16, 16)
 
 	def __str__(self):
-		s1 = "       Time to Speed 1: % d" % (self.tts_1)
-		s2 = "       Time to Speed 2: % d" % (self.tts_2)
+		s1 = "%25s: % d" % ("Time to Speed 1", self.tts_1)
+		s2 = "%25s: % d" % ("Time to Speed 2", self.tts_2)
 
 		return "\n".join([s1, s2])
 
