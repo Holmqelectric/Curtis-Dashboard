@@ -32,7 +32,7 @@ class FlukeGUI(BaseGUI):
 		image_index = int((self.objects[0].dc_capacitor_voltage / 150.0)*5) + 1
 
 		imagefile = "battery_%d.png" % image_index
-		segment = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', imagefile))
+		segment = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', imagefile))
 		segment = segment.convert_alpha()
 		self.screen.blit(segment, (0,0))
 
@@ -40,7 +40,7 @@ class FlukeGUI(BaseGUI):
 	def draw_power(self):
 
 		power = max(self.objects[1].motor_power, 0)
-		needle = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'kw_needle.png'))
+		needle = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', 'kw_needle.png'))
 		needle = needle.convert_alpha()
 		needle = pygame.transform.rotozoom(needle, -power*(160.0/70.0), 1.0)
 		pos = needle.get_rect()
@@ -51,7 +51,7 @@ class FlukeGUI(BaseGUI):
 	def draw_speed(self):
 
 		speed = self.objects[0].get_speed()
-		needle = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'speed_needle.png'))
+		needle = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', 'speed_needle.png'))
 		needle = needle.convert_alpha()
 		needle = pygame.transform.rotozoom(needle, -speed*(180.0/160.0), 1.0)
 		pos = needle.get_rect()
@@ -60,13 +60,13 @@ class FlukeGUI(BaseGUI):
 		self.screen.blit(needle, pos)
 
 	def draw_background(self):
-		bg = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'background.png'))
+		bg = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', 'background.png'))
 		bg = bg.convert_alpha()
 		bg = pygame.transform.scale(bg, (800, 480))
 		self.screen.blit(bg, (0,0))
 
 	def load_full_image(self, filename):
-			img = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', filename))
+			img = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', filename))
 			img = img.convert_alpha()
 			self.screen.blit(img, (0, 0))
 
