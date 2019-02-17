@@ -15,7 +15,7 @@ FONT_NAME = "Noto Mono"
 
 class MegaGUI(BaseGUI):
 
-	def __init__(self, objects, shutdown, fullscreen):
+	def __init__(self, objects, evh, shutdown, fullscreen):
 		super(MegaGUI, self).__init__(objects, shutdown, fullscreen)
 
 	def draw_gauge(self, x, y, r, label, value):
