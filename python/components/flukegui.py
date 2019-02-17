@@ -31,7 +31,7 @@ class FlukeGUI(BaseGUI):
 		self.warning_signal_img = self.load_image('warn_signal.png')
 
 		self.bsegments = []
-		for index in range(1,6):
+		for index in range(1,7):
 			imagefile = "battery_%d.png" % index
 			segment = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', imagefile))
 			self.bsegments.append(segment.convert_alpha())
@@ -69,7 +69,10 @@ class FlukeGUI(BaseGUI):
 
 	def draw_battery(self):
 
-		image_index = int((self.objects[0].dc_capacitor_voltage / 150.0)*5) + 1
+		image_index = int((self.objects[0].dc_capacitor_voltage / 150.0)*5)
+		if image_index > 6:
+			image_index = 6
+
 		self.screen.blit(self.bsegments[image_index], (0,0))
 
 
