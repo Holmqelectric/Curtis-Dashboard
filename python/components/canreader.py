@@ -67,13 +67,21 @@ class CanReader(threading.Thread):
 			try:
 				line = self.infile.readline()
 			except:
+				time.sleep(0.1)
 				continue
 
-			# Remove endings and ignore empty/comment rows
+
+			# Remove endings and ignore empty lines
 			l = line.strip()
-			if len(l) == 0 or l.startswith("#"):
+			if len(l) == 0:
+				time.sleep(0.1)
 				continue
 
+			# Ignore comments
+			if l.startswith("#"):
+				continue
+
+			# Expect timestamp with '('
 			if not l.startswith("("):
 				print("Unparsable line:", l)
 				continue
