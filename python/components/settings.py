@@ -5,7 +5,8 @@ class DashboardSettings(object):
 	# relay_pins = [31, 33, 35, 37, 32, 36, 38, 40]
 	# input pins = [29, 22, 18, 16, 15, 13, 11, 12]
 
-	TURN_LEFT_OUT_PCB_PIN = 31
+	TURN_LEFT_OUT_PCB_PIN = 40
+	#TURN_LEFT_OUT_PCB_PIN = 31
 	TURN_RIGHT_OUT_PCB_PIN = 33
 	HIGHBEAM_OUT_PCB_PIN = 35
 	RUNNING_LIGHT_OUT_PCB_PIN = 37
