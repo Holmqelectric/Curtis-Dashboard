@@ -31,6 +31,7 @@ class BaseGUI(threading.Thread):
 		pygame.key.set_repeat()
 
 		pygame.init()
+		pygame.mixer.quit()
 
 	@staticmethod
 	def fill_gradient(surface, color, gradient, rect=None, vertical=True, forward=True):
