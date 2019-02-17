@@ -82,6 +82,7 @@ class EventHandler(threading.Thread):
 		super().__init__()
 		self.objects = objects
 		self.shutdown = shutdown
+		GPIO.setmode(GPIO.BOARD)
 
 		for pin in DS.IN_PINS:
 			GPIO.setup(pin, GPIO.IN)
