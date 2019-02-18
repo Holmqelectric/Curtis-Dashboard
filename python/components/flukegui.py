@@ -219,4 +219,6 @@ class FlukeGUI(BaseGUI):
 			time.sleep(0.1)
 
 		pygame.mouse.set_visible(True)
+		pygame.quit()
+
 
