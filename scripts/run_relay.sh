@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 ../python/relay.py
+python3 ../debug-scripts/relay.py
