@@ -20,9 +20,10 @@ class BaseGUI(threading.Thread):
 
 		if fullscreen:
 			self.screen = pygame.display.set_mode(size, pygame.FULLSCREEN)
-			pygame.mouse.set_visible(False)
+			self.set_mouse_visible(False)
 		else:
 			self.screen = pygame.display.set_mode(size)
+			self.set_mouse_visible(True)
 
 		# Set header (useful for testing, not so much for full screen mode!)
 		pygame.display.set_caption("Curtis Controller Instrument Cluster")
@@ -32,6 +33,14 @@ class BaseGUI(threading.Thread):
 
 		pygame.init()
 		pygame.mixer.quit()
+
+	def toggle_mouse_visible(self):
+		self.mouse_visible = not self.mouse_visible
+		pygame.mouse.set_visible(self.mouse_visible)
+
+	def set_mouse_visible(self, visible):
+		self.mouse_visible = visible
+		pygame.mouse.set_visible(self.mouse_visible)
 
 	@staticmethod
 	def fill_gradient(surface, color, gradient, rect=None, vertical=True, forward=True):
