@@ -2,6 +2,19 @@
 # -*- coding: utf-8 -*-
 
 class DashboardSettings(object):
+
+	DEBUG = True
+
+	SOFT_TURN_SIGNAL_MAX = 4
+	HARD_TURN_SIGNAL_LIMIT = 3
+
+
+	#
+	#
+	#	GPIO Pin settings
+	#
+	#
+
 	# relay_pins = [31, 33, 35, 37, 32, 36, 38, 40]
 	# input pins = [29, 22, 18, 16, 15, 13, 11, 12]
 
@@ -21,8 +34,8 @@ class DashboardSettings(object):
 	HORN_IN_PCB_PIN = 13
 
 	IN_PINS = [
-		#TURN_LEFT_IN_PCB_PIN,
-		#TURN_RIGHT_IN_PCB_PIN,
+		TURN_LEFT_IN_PCB_PIN,
+		TURN_RIGHT_IN_PCB_PIN,
 		#HIGHBEAM_IN_PCB_PIN,
 		#RUNNING_LIGHT_IN_PCB_PIN,
 		#BRAKE_LIGHT_IN_PCB_PIN,
@@ -31,7 +44,7 @@ class DashboardSettings(object):
 
 	OUT_PINS = [
 		TURN_LEFT_OUT_PCB_PIN,
-		#TURN_RIGHT_OUT_PCB_PIN,
+		TURN_RIGHT_OUT_PCB_PIN,
 		#HIGHBEAM_OUT_PCB_PIN,
 		#RUNNING_LIGHT_OUT_PCB_PIN,
 		#BRAKE_LIGHT_OUT_PCB_PIN,
