@@ -158,15 +158,14 @@ class EventHandler(threading.Thread):
 				# If we hold it long enough we should blink until button pushed next time
 				self.toggle_left_turn(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
 
-			if DS.TURN_RIGHT_IN_PCB_PIN in DS.IN_PINS:
-				pinstate = GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN)
-				if pinstate == GPIO.HIGH:
-					# Wait until the button is released
-					wait_count = 0
-					while GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN) == GPIO.HIGH and not self.shutdown.is_set():
-						time.sleep(0.1)
-					# If we hold it long enough we should blink until button pushed next time
-					self.toggle_right_turn(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
+			pinstate = GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN)
+			if pinstate == GPIO.HIGH:
+				# Wait until the button is released
+				wait_count = 0
+				while GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN) == GPIO.HIGH and not self.shutdown.is_set():
+					time.sleep(0.1)
+				# If we hold it long enough we should blink until button pushed next time
+				self.toggle_right_turn(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
 
 			time.sleep(0.1)
 
