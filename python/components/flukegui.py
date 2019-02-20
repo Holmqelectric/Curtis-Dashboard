@@ -11,6 +11,10 @@ from components.settings import DashboardSettings as DS
 
 from .basegui import BaseGUI
 
+if DS.DEBUG:
+	from components.dummy_pi import GPIO
+
+
 FONT_NAME = "Noto Mono"
 
 class FlukeGUI(BaseGUI):
@@ -69,9 +73,12 @@ class FlukeGUI(BaseGUI):
 
 	def draw_battery(self):
 
-		image_index = int((self.objects[0].dc_capacitor_voltage / 150.0)*5)
-		if image_index > 6:
-			image_index = 6
+		image_index = int((self.objects[0].dc_capacitor_voltage / 150.0)*6) - 1
+		if image_index > 5:
+			image_index = 5
+
+		if image_index < 0:
+			return
 
 		self.screen.blit(self.bsegments[image_index], (0,0))
 
@@ -195,10 +202,20 @@ class FlukeGUI(BaseGUI):
 				if event.type == pygame.QUIT:
 					self.shutdown.set()
 
-				# 'Q' to quit
+				if event.type == pygame.KEYDOWN:
+					if event.key == pygame.K_l and DS.DEBUG:
+						GPIO.output(DS.TURN_LEFT_IN_PCB_PIN, GPIO.HIGH)
+
 				if event.type == pygame.KEYUP:
 					if event.key == pygame.K_q:
 						self.shutdown.set()
+
+					if event.key == pygame.K_m:
+						self.toggle_mouse_visible()
+
+					if event.key == pygame.K_l and DS.DEBUG:
+						GPIO.output(DS.TURN_LEFT_IN_PCB_PIN, GPIO.LOW)
+
 
 				# Handle on-screen controls
 				if event.type == pygame.MOUSEBUTTONUP:
