@@ -10,17 +10,16 @@ import time
 
 from threading import Event
 
-from components.canreader import CanReader
-from components.eventhandler import EventHandler
+from components.settings import DashboardSettings as DS
 from components.messages import *
-from components.megagui import MegaGUI
-from components.flukegui import FlukeGUI
+
 
 # Global semaphore that makes all threads quit
 shutdown = Event()
 
 
-def run(infile, replay_mode, fullscreen, use_mega):
+def run(infile, replay_mode, fullscreen):
+
 	global shutdown
 
 	objects = [Msg_1a6(), Msg_2a6(), Msg_3a6(), Msg_4a6()]
@@ -31,11 +30,7 @@ def run(infile, replay_mode, fullscreen, use_mega):
 	evh = EventHandler(objects, shutdown)
 	evh.start()
 
-	if use_mega:
-		gui = MegaGUI(objects, evh, shutdown, fullscreen)
-	else:
-		gui = FlukeGUI(objects, evh, shutdown, fullscreen)
-
+	gui = FlukeGUI(objects, evh, shutdown, fullscreen)
 	gui.start()
 
 	# Let the main sleep until everyone has acknowledged the shutdown
@@ -47,11 +42,11 @@ def run(infile, replay_mode, fullscreen, use_mega):
 	gui.join()
 
 
-def run_profile(infile, replay_mode, fullscreen, use_mega):
+def run_profile(infile, replay_mode, fullscreen):
 	import cProfile
 	pr = cProfile.Profile()
 	pr.enable()
-	run(sys.stdin, args.run_replay, args.use_fullscreen, args.use_mega)
+	run(sys.stdin, args.run_replay, args.use_fullscreen)
 	pr.disable()
 	pr.print_stats(sort="calls")
 
@@ -71,16 +66,24 @@ if __name__ == "__main__":
 						help='Run in replay mode, default false')
 	parser.add_argument('-f', '--fullscreen', dest='use_fullscreen', action='store_true',
 						help='Run in fullscreen mode, default false')
-	parser.add_argument('-m', dest='use_mega', action='store_true',
-						help='Use the mega GUI, default false')
+	parser.add_argument('-d', dest='debug', action='store_true',
+						help='Start in debug mode')
 
 	args = parser.parse_args()
+
+	if args.debug:
+		DS.DEBUG = True
+
+	# Late import to acknowledge the debug flag
+	from components.canreader import CanReader
+	from components.eventhandler import EventHandler
+	from components.flukegui import FlukeGUI
 
 	# make stdin a non-blocking file
 	fd = sys.stdin.fileno()
 	fl = fcntl.fcntl(fd, fcntl.F_GETFL)
 	fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
-	run(sys.stdin, args.run_replay, args.use_fullscreen, args.use_mega)
+	run(sys.stdin, args.run_replay, args.use_fullscreen)
 	#run_profile(sys.stdin, args.run_replay, args.use_fullscreen, args.use_mega)
 

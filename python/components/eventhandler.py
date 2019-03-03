@@ -33,6 +33,9 @@ class TurnHandler(threading.Thread):
 		# If set then we blink forever
 		self.hard_turn_signal = False
 
+		GPIO.output(DS.TURN_LEFT_OUT_PCB_PIN, RELAY_OFF)
+		GPIO.output(DS.TURN_RIGHT_OUT_PCB_PIN, RELAY_OFF)
+
 	def activate_left(self):
 		self.left_active = True
 		# Start off with false because it is swapped directly in the run loop
@@ -169,4 +172,5 @@ class EventHandler(threading.Thread):
 
 			time.sleep(0.1)
 
+		time.sleep(1.0)
 		GPIO.cleanup()
