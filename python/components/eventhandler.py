@@ -33,6 +33,8 @@ class TurnHandler(threading.Thread):
 		# If set then we blink forever
 		self.hard_turn_signal = False
 
+		self.cycle_count = 0
+
 		GPIO.output(DS.TURN_LEFT_OUT_PCB_PIN, RELAY_OFF)
 		GPIO.output(DS.TURN_RIGHT_OUT_PCB_PIN, RELAY_OFF)
 
@@ -40,10 +42,12 @@ class TurnHandler(threading.Thread):
 		self.left_active = True
 		# Start off with false because it is swapped directly in the run loop
 		self.left_state = False
+		self.cycle_count = 0
 
 	def activate_right(self):
 		self.right_active = True
 		self.right_state = False
+		self.cycle_count = 0
 
 	def deactivate_left(self):
 		self.left_active = False
@@ -59,7 +63,6 @@ class TurnHandler(threading.Thread):
 		do_once = False
 		while not self.shutdown.is_set():
 
-			cycle_count = 0
 			while (self.left_active or self.right_active) and not self.shutdown.is_set():
 				do_once = True
 				if self.left_active:
@@ -74,12 +77,12 @@ class TurnHandler(threading.Thread):
 
 				# Auto shut off if we reach soft limit
 				if self.hard_turn_signal is False:
-					if cycle_count > DS.SOFT_TURN_SIGNAL_MAX:
+					if self.cycle_count > DS.SOFT_TURN_SIGNAL_MAX:
 						self.deactivate_right()
 						self.deactivate_left()
 						break
 
-				cycle_count += 1
+				self.cycle_count += 1
 				time.sleep(self.interval)
 
 			if do_once:
@@ -158,6 +161,7 @@ class EventHandler(threading.Thread):
 				while GPIO.input(DS.TURN_LEFT_IN_PCB_PIN) == GPIO.HIGH and not self.shutdown.is_set():
 					wait_count += 1
 					time.sleep(0.1)
+				print("Wait count:", wait_count)
 				# If we hold it long enough we should blink until button pushed next time
 				self.toggle_left_turn(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
 
@@ -166,7 +170,9 @@ class EventHandler(threading.Thread):
 				# Wait until the button is released
 				wait_count = 0
 				while GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN) == GPIO.HIGH and not self.shutdown.is_set():
+					wait_count +=1
 					time.sleep(0.1)
+				print("Wait count:", wait_count)
 				# If we hold it long enough we should blink until button pushed next time
 				self.toggle_right_turn(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
 
