@@ -8,6 +8,7 @@ class GPIO(object):
 	OUT = "out"
 	HIGH = "high"
 	LOW = "low"
+	PUD_DOWN = "PULL DOWN"
 	__mode = "not set"
 	__pins = [(None, None)]*50
 
@@ -16,7 +17,7 @@ class GPIO(object):
 		cls.__mode = mode
 
 	@classmethod
-	def setup(cls, pin, direction):
+	def setup(cls, pin, direction, pull_up_down=PUD_DOWN):
 		if cls.__pins[pin][0] is not None:
 			print("WARNING: Pin %d is already setup. Has direction '%s'" % (pin, cls.__pins[pin][0]))
 			return

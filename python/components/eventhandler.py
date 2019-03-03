@@ -102,7 +102,7 @@ class EventHandler(threading.Thread):
 		GPIO.setmode(GPIO.BOARD)
 
 		for pin in DS.IN_PINS:
-			GPIO.setup(pin, GPIO.IN)
+			GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 		for pin in DS.OUT_PINS:
 			GPIO.setup(pin, GPIO.OUT)
