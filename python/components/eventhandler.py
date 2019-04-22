@@ -116,23 +116,24 @@ class EventHandler(threading.Thread):
 		self.warning_active = False
 		self.highbeam_active = False
 
-	def toggle_right_turn(self, is_hard=False):
+	def toggle_right_turn(self):
 		if not self.warning_active:
 			self.turn_signal.deactivate_left()
 			if self.turn_signal.right_active:
 				self.turn_signal.deactivate_right()
 			else:
-				self.turn_signal.hard_turn_signal = is_hard
 				self.turn_signal.activate_right()
 
-	def toggle_left_turn(self, is_hard=False):
+	def toggle_left_turn(self):
 		if not self.warning_active:
 			self.turn_signal.deactivate_right()
 			if self.turn_signal.left_active:
 				self.turn_signal.deactivate_left()
 			else:
-				self.turn_signal.hard_turn_signal = is_hard
 				self.turn_signal.activate_left()
+
+	def set_turn_duration(self, is_long):
+		self.turn_signal.hard_turn_signal = is_long
 
 	def toggle_warning(self):
 		if not self.warning_active:
@@ -150,31 +151,36 @@ class EventHandler(threading.Thread):
 		gpiostate = RELAY_ON if self.highbeam_active else RELAY_OFF
 		GPIO.output(DS.HIGHBEAM_OUT_PCB_PIN, gpiostate)
 
+	def wait_for_release(self, pin_number):
+		wait_count = 0
+		while GPIO.input(pin_number) == GPIO.HIGH and not self.shutdown.is_set():
+			wait_count += 1
+			time.sleep(0.1)
+		return wait_count
+
 	def run(self):
 
 		while not self.shutdown.is_set():
 
 			pinstate = GPIO.input(DS.TURN_LEFT_IN_PCB_PIN)
 			if pinstate == GPIO.HIGH:
+				self.toggle_left_turn()
+
 				# Wait until the button is released
-				wait_count = 0
-				while GPIO.input(DS.TURN_LEFT_IN_PCB_PIN) == GPIO.HIGH and not self.shutdown.is_set():
-					wait_count += 1
-					time.sleep(0.1)
-				print("Wait count:", wait_count)
+				wait_count = self.wait_for_release(DS.TURN_LEFT_IN_PCB_PIN)
+
 				# If we hold it long enough we should blink until button pushed next time
-				self.toggle_left_turn(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
+				self.set_turn_duration(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
 
 			pinstate = GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN)
 			if pinstate == GPIO.HIGH:
+				self.toggle_right_turn()
+
 				# Wait until the button is released
-				wait_count = 0
-				while GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN) == GPIO.HIGH and not self.shutdown.is_set():
-					wait_count +=1
-					time.sleep(0.1)
-				print("Wait count:", wait_count)
+				wait_count = self.wait_for_release(DS.TURN_RIGHT_IN_PCB_PIN)
+
 				# If we hold it long enough we should blink until button pushed next time
-				self.toggle_right_turn(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
+				self.set_turn_duration(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
 
 			time.sleep(0.1)
 
