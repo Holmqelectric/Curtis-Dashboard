@@ -151,6 +151,19 @@ class EventHandler(threading.Thread):
 		gpiostate = RELAY_ON if self.highbeam_active else RELAY_OFF
 		GPIO.output(DS.HIGHBEAM_OUT_PCB_PIN, gpiostate)
 
+	def set_highbeam(self, state):
+		self.highbeam_active = state
+		gpiostate = RELAY_ON if self.highbeam_active else RELAY_OFF
+		GPIO.output(DS.HIGHBEAM_OUT_PCB_PIN, gpiostate)
+
+	def set_brake(self, state):
+		gpiostate = RELAY_ON if state else RELAY_OFF
+		GPIO.output(DS.BRAKE_LIGHT_OUT_PCB_PIN, gpiostate)
+
+	def set_horn(self, state):
+		gpiostate = RELAY_ON if state else RELAY_OFF
+		GPIO.output(DS.HORN_OUT_PCB_PIN, gpiostate)
+
 	def wait_for_release(self, pin_number):
 		wait_count = 0
 		while GPIO.input(pin_number) == GPIO.HIGH and not self.shutdown.is_set():
@@ -161,6 +174,25 @@ class EventHandler(threading.Thread):
 	def run(self):
 
 		while not self.shutdown.is_set():
+
+			pinstate = GPIO.input(DS.BRAKE_LIGHT_IN_PCB_PIN)
+			if pinstate == GPIO.HIGH:
+				self.set_brake(True)
+			else:
+				self.set_brake(False)
+
+			pinstate = GPIO.input(DS.HIGHBEAM_IN_PCB_PIN)
+			if pinstate == GPIO.HIGH:
+				self.set_highbeam(True)
+			else:
+				self.set_highbeam(False)
+
+			pinstate = GPIO.input(DS.HORN_IN_PCB_PIN)
+			if pinstate == GPIO.HIGH:
+				self.set_horn(True)
+			else:
+				self.set_horn(False)
+
 
 			pinstate = GPIO.input(DS.TURN_LEFT_IN_PCB_PIN)
 			if pinstate == GPIO.HIGH:
