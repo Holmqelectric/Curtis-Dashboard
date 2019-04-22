@@ -41,7 +41,7 @@ class DashboardSettings(object):
 	#
 
 	# relay_pins = [31, 33, 32, 36, 38, 40]
-	# input pins = [22, 18, 16, 12, 7, 26]
+	# input pins = [18, 16, 12, 7, 26]
 
 	TURN_LEFT_OUT_PCB_PIN = 31
 	TURN_RIGHT_OUT_PCB_PIN = 33
@@ -50,11 +50,11 @@ class DashboardSettings(object):
 	HORN_OUT_PCB_PIN = 38
 	RUN_OUT_PCB_PIN = 40
 
-	TURN_LEFT_IN_PCB_PIN = 22
-	TURN_RIGHT_IN_PCB_PIN = 18
-	HIGHBEAM_IN_PCB_PIN = 16
-	BRAKE_LIGHT_IN_PCB_PIN = 12
-	HORN_IN_PCB_PIN = 7
+	TURN_LEFT_IN_PCB_PIN = 18
+	TURN_RIGHT_IN_PCB_PIN = 16
+	HIGHBEAM_IN_PCB_PIN = 12
+	BRAKE_LIGHT_IN_PCB_PIN = 7
+	HORN_IN_PCB_PIN = 26
 
 	IN_PINS = [
 		TURN_LEFT_IN_PCB_PIN,
