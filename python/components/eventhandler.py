@@ -156,6 +156,8 @@ class EventHandler(threading.Thread):
 		if self.highbeam_active == state:
 			return
 
+		print("Highbeam changed state, is now:", state)
+
 		self.highbeam_active = state
 		gpiostate = RELAY_ON if self.highbeam_active else RELAY_OFF
 		GPIO.output(DS.HIGHBEAM_OUT_PCB_PIN, gpiostate)
@@ -207,6 +209,7 @@ class EventHandler(threading.Thread):
 			# HIGH BEAM
 			pinstate = GPIO.input(DS.HIGHBEAM_IN_PCB_PIN)
 			if pinstate == INPUT_ON:
+				print("Highbeam GPIO is on")
 				self.set_highbeam(True)
 			else:
 				self.set_highbeam(False)
@@ -229,7 +232,8 @@ class EventHandler(threading.Thread):
 
 			# This means warning turn signals
 			if pinleft == INPUT_ON and pinright == INPUT_ON:
-				self.toggle_warning()
+				if self.make_sure_pushed(DS.TURN_LEFT_IN_PCB_PIN) and self.make_sure_pushed(DS.TURN_RIGHT_IN_PCB_PIN):
+					self.toggle_warning()
 
 			# Left only
 			elif pinleft == INPUT_ON:
