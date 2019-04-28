@@ -178,11 +178,22 @@ class EventHandler(threading.Thread):
 		gpiostate = RELAY_ON if state else RELAY_OFF
 		GPIO.output(DS.HORN_OUT_PCB_PIN, gpiostate)
 
-	def wait_for_release(self, pin_number):
+	def wait_for_release(self, pin1_number, pin2_number=None):
 		wait_count = 0
-		while GPIO.input(pin_number) == INPUT_ON and not self.shutdown.is_set():
-			wait_count += 1
-			time.sleep(0.1)
+		if not pin2_number:
+			# Single button pushed
+			while GPIO.input(pin1_number) == INPUT_ON and not self.shutdown.is_set():
+				wait_count += 1
+				time.sleep(0.1)
+		else:
+			# Two button push
+			while GPIO.input(pin1_number) == INPUT_ON and \
+				GPIO.input(pin2_number) == INPUT_ON and \
+				not self.shutdown.is_set():
+
+				wait_count += 1
+				time.sleep(0.1)
+
 		return wait_count
 
 	def make_sure_pushed(self, pin_number):
@@ -232,7 +243,8 @@ class EventHandler(threading.Thread):
 
 			# This means warning turn signals
 			if pinleft == INPUT_ON and pinright == INPUT_ON:
-				if self.make_sure_pushed(DS.TURN_LEFT_IN_PCB_PIN) and self.make_sure_pushed(DS.TURN_RIGHT_IN_PCB_PIN):
+				wait_count = self.wait_for_release(DS.TURN_LEFT_IN_PCB_PIN, DS.TURN_RIGHT_IN_PCB_PIN)
+				if wait_count > 2:
 					self.toggle_warning()
 
 			# Left only
