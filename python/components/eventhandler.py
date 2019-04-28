@@ -14,6 +14,10 @@ else:
 RELAY_OFF = GPIO.HIGH
 RELAY_ON = GPIO.LOW
 
+INPUT_ON = GPIO.HIGH
+INPUT_OFF = GPIO.LOW
+PULL_TO_OFF = GPIO.PUD_DOWN
+
 # Separate thread to handle the timed blinking of turn signal
 class TurnHandler(threading.Thread):
 	def __init__(self, shutdown, interval=0.5):
@@ -69,11 +73,15 @@ class TurnHandler(threading.Thread):
 					self.left_state = not self.left_state
 					gpiostate = RELAY_ON if self.left_state else RELAY_OFF
 					GPIO.output(DS.TURN_LEFT_OUT_PCB_PIN, gpiostate)
+				else:
+					GPIO.output(DS.TURN_LEFT_OUT_PCB_PIN, RELAY_OFF)
 
 				if self.right_active:
 					self.right_state = not self.right_state
 					gpiostate = RELAY_ON if self.right_state else RELAY_OFF
 					GPIO.output(DS.TURN_RIGHT_OUT_PCB_PIN, gpiostate)
+				else:
+					GPIO.output(DS.TURN_RIGHT_OUT_PCB_PIN, RELAY_OFF)
 
 				# Auto shut off if we reach soft limit
 				if self.hard_turn_signal is False:
@@ -105,7 +113,7 @@ class EventHandler(threading.Thread):
 		GPIO.setmode(GPIO.BOARD)
 
 		for pin in DS.IN_PINS:
-			GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+			GPIO.setup(pin, GPIO.IN, pull_up_down=PULL_TO_OFF)
 
 		for pin in DS.OUT_PINS:
 			GPIO.setup(pin, GPIO.OUT)
@@ -133,7 +141,8 @@ class EventHandler(threading.Thread):
 				self.turn_signal.activate_left()
 
 	def set_turn_duration(self, is_long):
-		self.turn_signal.hard_turn_signal = is_long
+		if not self.warning_active:
+			self.turn_signal.hard_turn_signal = is_long
 
 	def toggle_warning(self):
 		if not self.warning_active:
@@ -175,27 +184,41 @@ class EventHandler(threading.Thread):
 
 		while not self.shutdown.is_set():
 
+			# BRAKE LIGHT
 			pinstate = GPIO.input(DS.BRAKE_LIGHT_IN_PCB_PIN)
-			if pinstate == GPIO.HIGH:
+			if pinstate == INPUT_ON:
 				self.set_brake(True)
 			else:
 				self.set_brake(False)
 
+			# HIGH BEAM
 			pinstate = GPIO.input(DS.HIGHBEAM_IN_PCB_PIN)
-			if pinstate == GPIO.HIGH:
+			if pinstate == INPUT_ON:
 				self.set_highbeam(True)
 			else:
 				self.set_highbeam(False)
 
+			# HORN
 			pinstate = GPIO.input(DS.HORN_IN_PCB_PIN)
-			if pinstate == GPIO.HIGH:
+			if pinstate == INPUT_ON:
 				self.set_horn(True)
 			else:
 				self.set_horn(False)
 
 
-			pinstate = GPIO.input(DS.TURN_LEFT_IN_PCB_PIN)
-			if pinstate == GPIO.HIGH:
+			#
+			# TURN SIGNALS AND WARNING
+			#
+
+			pinleft = GPIO.input(DS.TURN_LEFT_IN_PCB_PIN)
+			pinright = GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN)
+
+			# This means warning turn signals
+			if pinleft == INPUT_ON and pinright == INPUT_ON:
+				self.toggle_warning()
+
+			# Left only
+			elif pinleft == INPUT_ON:
 				self.toggle_left_turn()
 
 				# Wait until the button is released
@@ -204,8 +227,8 @@ class EventHandler(threading.Thread):
 				# If we hold it long enough we should blink until button pushed next time
 				self.set_turn_duration(wait_count > DS.HARD_TURN_SIGNAL_LIMIT)
 
-			pinstate = GPIO.input(DS.TURN_RIGHT_IN_PCB_PIN)
-			if pinstate == GPIO.HIGH:
+			# Turn signal Right
+			elif pinright == INPUT_ON:
 				self.toggle_right_turn()
 
 				# Wait until the button is released
