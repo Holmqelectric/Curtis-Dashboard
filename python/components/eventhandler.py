@@ -178,7 +178,7 @@ class EventHandler(threading.Thread):
 
 	def wait_for_release(self, pin_number):
 		wait_count = 0
-		while GPIO.input(pin_number) == GPIO.HIGH and not self.shutdown.is_set():
+		while GPIO.input(pin_number) == INPUT_ON and not self.shutdown.is_set():
 			wait_count += 1
 			time.sleep(0.1)
 		return wait_count
