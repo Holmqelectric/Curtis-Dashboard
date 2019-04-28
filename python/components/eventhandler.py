@@ -14,9 +14,9 @@ else:
 RELAY_OFF = GPIO.HIGH
 RELAY_ON = GPIO.LOW
 
-INPUT_ON = GPIO.HIGH
-INPUT_OFF = GPIO.LOW
-PULL_TO_OFF = GPIO.PUD_DOWN
+INPUT_ON = GPIO.LOW
+INPUT_OFF = GPIO.HIGH
+PULL_TO_OFF = GPIO.PUD_UP
 
 # Separate thread to handle the timed blinking of turn signal
 class TurnHandler(threading.Thread):
