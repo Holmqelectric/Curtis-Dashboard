@@ -9,6 +9,7 @@ class GPIO(object):
 	HIGH = "high"
 	LOW = "low"
 	PUD_DOWN = "PULL DOWN"
+	PUD_UP = "PULL UP"
 	__mode = "not set"
 	__pins = [(None, None)]*50
 
