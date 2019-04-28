@@ -183,6 +183,15 @@ class EventHandler(threading.Thread):
 			time.sleep(0.1)
 		return wait_count
 
+	def make_sure_pushed(self, pin_number):
+		count = 0
+		time.sleep(0.05)
+		count += (GPIO.input(pin_number) == INPUT_ON)
+		time.sleep(0.05)
+		count += (GPIO.input(pin_number) == INPUT_ON)
+
+		return count == 2
+
 	def run(self):
 
 		while not self.shutdown.is_set():
@@ -190,7 +199,8 @@ class EventHandler(threading.Thread):
 			# BRAKE LIGHT
 			pinstate = GPIO.input(DS.BRAKE_LIGHT_IN_PCB_PIN)
 			if pinstate == INPUT_ON:
-				self.set_brake(True)
+				if self.make_sure_pushed(DS.BRAKE_LIGHT_IN_PCB_PIN):
+					self.set_brake(True)
 			else:
 				self.set_brake(False)
 
@@ -204,7 +214,8 @@ class EventHandler(threading.Thread):
 			# HORN
 			pinstate = GPIO.input(DS.HORN_IN_PCB_PIN)
 			if pinstate == INPUT_ON:
-				self.set_horn(True)
+				if self.make_sure_pushed(DS.HORN_IN_PCB_PIN):
+					self.set_horn(True)
 			else:
 				self.set_horn(False)
 
