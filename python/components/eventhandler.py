@@ -56,32 +56,26 @@ class TurnHandler(threading.Thread):
 	def deactivate_left(self):
 		self.left_active = False
 		self.left_state = False
-		#self.hard_turn_signal = False
+		GPIO.output(DS.TURN_LEFT_OUT_PCB_PIN, RELAY_OFF)
 
 	def deactivate_right(self):
 		self.right_active = False
 		self.right_state = False
-		#self.hard_turn_signal = False
+		GPIO.output(DS.TURN_RIGHT_OUT_PCB_PIN, RELAY_OFF)
 
 	def run(self):
-		do_once = False
 		while not self.shutdown.is_set():
 
 			while (self.left_active or self.right_active) and not self.shutdown.is_set():
-				do_once = True
 				if self.left_active:
 					self.left_state = not self.left_state
 					gpiostate = RELAY_ON if self.left_state else RELAY_OFF
 					GPIO.output(DS.TURN_LEFT_OUT_PCB_PIN, gpiostate)
-				else:
-					GPIO.output(DS.TURN_LEFT_OUT_PCB_PIN, RELAY_OFF)
 
 				if self.right_active:
 					self.right_state = not self.right_state
 					gpiostate = RELAY_ON if self.right_state else RELAY_OFF
 					GPIO.output(DS.TURN_RIGHT_OUT_PCB_PIN, gpiostate)
-				else:
-					GPIO.output(DS.TURN_RIGHT_OUT_PCB_PIN, RELAY_OFF)
 
 				# Auto shut off if we reach soft limit
 				if self.hard_turn_signal is False:
@@ -92,12 +86,6 @@ class TurnHandler(threading.Thread):
 
 				self.cycle_count += 1
 				time.sleep(self.interval)
-
-			if do_once:
-				# Make sure to finally turn lights off
-				do_once = False
-				GPIO.output(DS.TURN_LEFT_OUT_PCB_PIN, RELAY_OFF)
-				GPIO.output(DS.TURN_RIGHT_OUT_PCB_PIN, RELAY_OFF)
 
 			# Note the indent
 			time.sleep(0.1)
@@ -117,12 +105,16 @@ class EventHandler(threading.Thread):
 
 		for pin in DS.OUT_PINS:
 			GPIO.setup(pin, GPIO.OUT)
+			GPIO.output(pin, RELAY_OFF)
+
 
 		self.turn_signal = TurnHandler(shutdown)
 		self.turn_signal.start()
 
 		self.warning_active = False
 		self.highbeam_active = False
+		self.brake_active = False
+		self.horn_active = False
 
 	def toggle_right_turn(self):
 		if not self.warning_active:
@@ -161,15 +153,26 @@ class EventHandler(threading.Thread):
 		GPIO.output(DS.HIGHBEAM_OUT_PCB_PIN, gpiostate)
 
 	def set_highbeam(self, state):
+		if self.highbeam_active == state:
+			return
+
 		self.highbeam_active = state
 		gpiostate = RELAY_ON if self.highbeam_active else RELAY_OFF
 		GPIO.output(DS.HIGHBEAM_OUT_PCB_PIN, gpiostate)
 
 	def set_brake(self, state):
+		if self.brake_active == state:
+			return
+
+		self.brake_active = state
 		gpiostate = RELAY_ON if state else RELAY_OFF
 		GPIO.output(DS.BRAKE_LIGHT_OUT_PCB_PIN, gpiostate)
 
 	def set_horn(self, state):
+		if self.horn_active == state:
+			return
+
+		self.horn_active = state
 		gpiostate = RELAY_ON if state else RELAY_OFF
 		GPIO.output(DS.HORN_OUT_PCB_PIN, gpiostate)
 
