@@ -135,7 +135,7 @@ class FlukeGUI(BaseGUI):
 
 	def print_power(self):
 		power = max(self.objects[1].motor_power, 0)
-		self.draw_text(self.screen, str(power), 60, (20, 325))
+		self.draw_text(self.screen, "%.01f" % power, 60, (20, 325))
 
 	def print_current(self):
 		current = max(self.objects[0].motor_rms_current, 0)
@@ -161,6 +161,11 @@ class FlukeGUI(BaseGUI):
 		temp = max(self.objects[1].motor_temp, 0)
 		self.draw_text(self.screen, "%.0f" % temp, 45, (304, 430), topright=True)
 
+	def print_dcdc(self):
+		dcdc = max(self.objects[3].dcdc, 0)
+		self.draw_text(self.screen, "%.01f" % dcdc, 45, (120, 430), topright=True)
+
+
 	def run(self):
 		while not self.shutdown.is_set():
 
@@ -182,10 +187,11 @@ class FlukeGUI(BaseGUI):
 			self.print_power()
 			self.print_current()
 			self.print_battery_voltage()
-			self.print_range()
+			#self.print_range()
 			self.print_odometer()
 			self.print_ctrl_temp()
 			self.print_motor_temp()
+			self.print_dcdc()
 
 			pygame.display.flip()
 

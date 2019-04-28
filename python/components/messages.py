@@ -28,12 +28,12 @@ def parse_signed_int(data, start, length):
 
 
 class Msg_1a6(object):
-	
-	# ("Motor Cogwheel Diameter" / "Rear Wheel Diameter") * 
-	#   "Rear Wheel Circumfence" * 
+
+	# ("Motor Cogwheel Diameter" / "Rear Wheel Diameter") *
+	#   "Rear Wheel Circumfence" *
 	#   ("Minutes in an hour" / "Meters in a kilometer")
 	GEARBOX_AND_WHEEL_RATIO = (32.0 / 144.0) * 2.038 * (60.0 / 1000.0)
-	
+
 	def __init__(self):
 		self.motor_rms_current = 0
 		self.actual_speed = 0
@@ -41,9 +41,9 @@ class Msg_1a6(object):
 		self.dc_capacitor_voltage = 0
 
 	def parse(self, data):
-		self.motor_rms_current = parse_unsigned_int(data, 0, 16) / 10.0
+		self.motor_rms_current = int(parse_unsigned_int(data, 0, 16) / 10.0)
 		self.actual_speed = parse_signed_int(data, 16, 16)
-		self.battery_current = parse_signed_int(data, 32, 16) / 10.0
+		self.battery_current = int(parse_signed_int(data, 32, 16) / 10.0)
 		self.dc_capacitor_voltage = (parse_unsigned_int(data, 48, 16) / 64.0)
 
 	def __str__(self):
@@ -65,10 +65,10 @@ class Msg_1a6(object):
 		return speed
 
 class Msg_2a6(object):
-	STATES = ["Open", "Precharge", "Weld Check", "Closing Delay", "Missing Check", 
-	"Closed (When Main Enable = On)", "Delay", "Arc Check", "Open Delay", "Fault", 
+	STATES = ["Open", "Precharge", "Weld Check", "Closing Delay", "Missing Check",
+	"Closed (When Main Enable = On)", "Delay", "Arc Check", "Open Delay", "Fault",
 	"Closed (When Main Enable = Off)"]
-			
+
 	def __init__(self):
 
 		self.motor_temp = 0
@@ -84,12 +84,12 @@ class Msg_2a6(object):
 
 		state = parse_unsigned_int(data, 32, 8)
 		if state >= len(self.STATES):
-			self.sstate = "Unknown State! " + str(state)			
+			self.sstate = "Unknown State! " + str(state)
 		else:
 			self.sstate = self.STATES[state]
 
 		self.status = parse_unsigned_int(data, 40, 8)
-		self.motor_power = parse_signed_int(data, 48, 16)
+		self.motor_power = parse_signed_int(data, 48, 16) / 10.0
 
 	def __str__(self):
 		s1 = "%25s: % .01f" % ("Motor Temperature", self.motor_temp)
@@ -126,14 +126,17 @@ class Msg_4a6(object):
 	def __init__(self):
 		self.tts_1 = 0
 		self.tts_2 = 0
+		self.dcdc = 0
 
 	def parse(self, data):
 		self.tts_1 = parse_unsigned_int(data, 0, 16)
 		self.tts_2 = parse_signed_int(data, 16, 16)
+		self.dcdc = parse_unsigned_int(data, 48, 16)/100.0
 
 	def __str__(self):
 		s1 = "%25s: % d" % ("Time to Speed 1", self.tts_1)
 		s2 = "%25s: % d" % ("Time to Speed 2", self.tts_2)
+		s3 = "%25s: % .01f" % ("DC-DC", self.dcdc)
 
-		return "\n".join([s1, s2])
+		return "\n".join([s1, s2, s3])
 
