@@ -23,7 +23,11 @@ class GPIO(object):
 			print("WARNING: Pin %d is already setup. Has direction '%s'" % (pin, cls.__pins[pin][0]))
 			return
 
-		cls.__pins[pin] = (direction, GPIO.LOW)
+		#cls.__pins[pin] = (direction, GPIO.LOW)
+		if pull_up_down == GPIO.PUD_DOWN:
+			cls.__pins[pin] = (direction, GPIO.LOW)
+		else:
+			cls.__pins[pin] = (direction, GPIO.HIGH)
 
 	@classmethod
 	def output(cls, pin, state):
