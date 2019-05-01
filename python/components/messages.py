@@ -29,10 +29,10 @@ def parse_signed_int(data, start, length):
 
 class Msg_1a6(object):
 
-	# ("Motor Cogwheel Diameter" / "Rear Wheel Diameter") *
+	# ("Motor Cogwheel Diameter" / "Rear Cogwheel Diameter") *
 	#   "Rear Wheel Circumfence" *
 	#   ("Minutes in an hour" / "Meters in a kilometer")
-	GEARBOX_AND_WHEEL_RATIO = (32.0 / 144.0) * 2.038 * (60.0 / 1000.0)
+	GEARBOX_AND_WHEEL_RATIO = (24.0 / 144.0) * 2.040 * (60.0 / 1000.0)
 
 	def __init__(self):
 		self.motor_rms_current = 0
