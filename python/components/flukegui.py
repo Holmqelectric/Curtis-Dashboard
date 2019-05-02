@@ -138,8 +138,7 @@ class FlukeGUI(BaseGUI):
 		self.draw_text(self.screen, "%.01f" % power, 60, (20, 325))
 
 	def print_current(self):
-		current = self.objects[0].get_speed()
-		#current = max(self.objects[0].motor_rms_current, 0)
+		current = int(max(self.objects[0].motor_rms_current, 0))
 		self.draw_text(self.screen, str(current), 60, (20, 107))
 
 	def print_battery_voltage(self):

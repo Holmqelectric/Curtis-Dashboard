@@ -58,7 +58,7 @@ class Msg_1a6(object):
 		rpm = self.actual_speed
 
 		if rpm > 1.0:
-			speed = self.GEARBOX_AND_WHEEL_RATIO * rpm
+			speed = self.GEARBOX_AND_WHEEL_RATIO * rpm * 1.01
 		else:
 			speed = 0.0
 
