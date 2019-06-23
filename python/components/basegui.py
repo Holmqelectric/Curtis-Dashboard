@@ -109,12 +109,11 @@ class BaseGUI(threading.Thread):
 		scr.blit(text_bitmap, pos)
 
 	@staticmethod
-	def draw_shadow_text(scr, text, size, font, pos, topright=False):
+	def draw_shadow_text(scr, text, size, pos, font, color=(255, 255, 255), topright=False):
 		tfont = pygame.font.SysFont(font, size)
 
-		text_color = (255, 255, 255)
 		drop_color = (100, 100, 100)
-		dropshadow_offset = size // 25
+		dropshadow_offset = size // 20
 
 		text_bitmap = tfont.render(text, True, drop_color)
 		if topright:
@@ -124,7 +123,7 @@ class BaseGUI(threading.Thread):
 
 		scr.blit(text_bitmap, (pos[0] + dropshadow_offset, pos[1] + dropshadow_offset))
 
-		text_bitmap = tfont.render(text, 1, text_color)
+		text_bitmap = tfont.render(text, 1, color)
 		scr.blit(text_bitmap, pos)
 
 	@staticmethod

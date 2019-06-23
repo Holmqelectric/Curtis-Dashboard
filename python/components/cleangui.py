@@ -15,15 +15,16 @@ if DS.DEBUG:
 	from components.dummy_pi import GPIO
 
 
-FONT_NAME = "Orator Std"
-#FONT_NAME = "PF Din Text Universal weight=255"
+#FONT_NAME = "Orator Std"
+#FONT_NAME = "PF Din Text Universal Thin"
+FONT_NAME = "Bitstream Vera Sans"
 IMAGE_DIR = "images-clean"
 
 G1_SIZE = 28
 G2_SIZE = 24
 
 LEFT_BORDER = 64
-BOTTOM_BORDER = 435
+BOTTOM_BORDER = 430
 
 class CleanGUI(BaseGUI):
 
@@ -129,7 +130,7 @@ class CleanGUI(BaseGUI):
 		return img
 
 	def draw_text(self, scr, text, size, pos, font=FONT_NAME, color=(118, 186, 189), topright=False):
-		super(CleanGUI, self).draw_text(scr, text, size, pos, font, color, topright)
+		super(CleanGUI, self).draw_shadow_text(scr, text, size, pos, font, color, topright)
 
 	def show_full_image(self, img):
 		self.screen.blit(img, (0, 0))
@@ -156,15 +157,15 @@ class CleanGUI(BaseGUI):
 
 	def print_current(self):
 		current = int(max(self.objects[0].motor_rms_current, 0))
-		self.draw_text(self.screen, str(current), G1_SIZE, (LEFT_BORDER, 160))
+		self.draw_text(self.screen, str(current), G1_SIZE, (LEFT_BORDER, 155))
 
 	def print_rpm(self):
 		rpm = max(self.objects[0].actual_speed, 0)
-		self.draw_text(self.screen, str(rpm), G1_SIZE, (LEFT_BORDER, 240))
+		self.draw_text(self.screen, str(rpm), G1_SIZE, (LEFT_BORDER, 235))
 
 	def print_power(self):
 		power = max(self.objects[1].motor_power, 0)
-		self.draw_text(self.screen, "%.01f" % power, G1_SIZE, (LEFT_BORDER, 320))
+		self.draw_text(self.screen, "%.01f" % power, G1_SIZE, (LEFT_BORDER, 315))
 
 
 	#
