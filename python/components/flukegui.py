@@ -16,6 +16,7 @@ if DS.DEBUG:
 
 
 FONT_NAME = "Noto Mono"
+IMAGE_DIR = "images-fluke"
 
 class FlukeGUI(BaseGUI):
 
@@ -37,16 +38,16 @@ class FlukeGUI(BaseGUI):
 		self.bsegments = []
 		for index in range(1,7):
 			imagefile = "battery_%d.png" % index
-			segment = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', imagefile))
+			segment = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', IMAGE_DIR, imagefile))
 			self.bsegments.append(segment.convert_alpha())
 
-		self.powerneedle = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', 'kw_needle.png'))
+		self.powerneedle = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', IMAGE_DIR, 'kw_needle.png'))
 		self.powerneedle = self.powerneedle.convert_alpha()
 
-		self.speedneedle = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', 'speed_needle.png'))
+		self.speedneedle = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', IMAGE_DIR, 'speed_needle.png'))
 		self.speedneedle = self.speedneedle.convert_alpha()
 
-		self.bg = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', 'background.png'))
+		self.bg = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', IMAGE_DIR, 'background.png'))
 		self.bg = self.bg.convert_alpha()
 		self.bg = pygame.transform.scale(self.bg, (800, 480))
 
@@ -106,9 +107,13 @@ class FlukeGUI(BaseGUI):
 
 	@staticmethod
 	def load_image(filename):
-		img = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'images', filename))
+		img = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', IMAGE_DIR, filename))
 		img = img.convert_alpha()
 		return img
+
+	def draw_text(self, scr, text, size, pos, font=FONT_NAME, color=(255, 255, 255), topright=False):
+		super(FlukeGUI, self).draw_text(scr, text, size, pos, font, color, topright)
+
 
 	def show_full_image(self, img):
 		self.screen.blit(img, (0, 0))
