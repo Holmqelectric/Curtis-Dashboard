@@ -112,7 +112,7 @@ class BaseGUI(threading.Thread):
 	def draw_shadow_text(scr, text, size, pos, font, color=(255, 255, 255), topright=False):
 		tfont = pygame.font.SysFont(font, size)
 
-		drop_color = (100, 100, 100)
+		drop_color = (70, 70, 70)
 		dropshadow_offset = size // 20
 
 		text_bitmap = tfont.render(text, True, drop_color)

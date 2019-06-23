@@ -129,7 +129,7 @@ class CleanGUI(BaseGUI):
 		img = img.convert_alpha()
 		return img
 
-	def draw_text(self, scr, text, size, pos, font=FONT_NAME, color=(118, 186, 189), topright=False):
+	def draw_text(self, scr, text, size, pos, font=FONT_NAME, color=(144, 226, 229), topright=False):
 		super(CleanGUI, self).draw_shadow_text(scr, text, size, pos, font, color, topright)
 
 	def show_full_image(self, img):
@@ -273,6 +273,9 @@ class CleanGUI(BaseGUI):
 
 					if self.check_mouse_inside(pos, DS.HIGHBEAM_BBOX):
 						self.event_handler.toggle_highbeam()
+
+					if self.check_mouse_inside(pos, DS.RANGE_BBOX):
+						print("Reset SoC")
 
 
 			time.sleep(0.1)

@@ -8,6 +8,7 @@ class DashboardSettings(object):
 	SOFT_TURN_SIGNAL_MAX = 4
 	HARD_TURN_SIGNAL_LIMIT = 3
 
+	BATTERY_TOTAL_ENERGY = 12*1000.0
 
 	#
 	# PiCAN reserved pins
@@ -84,3 +85,4 @@ class DashboardSettings(object):
 	RIGHT_TURN_BBOX = [(695, 0), (695, 90), (800, 90), (800, 0)]
 	WARN_LIGHT_BBOX = [(145, 0), (145, 90), (240, 90), (240, 0)]
 	HIGHBEAM_BBOX = [(545, 0), (545, 90), (670, 90), (670, 0)]
+	RANGE_BBOX = [(600, 135), (600, 185), (660, 185), (660, 135)]
