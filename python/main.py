@@ -30,7 +30,7 @@ def run(infile, replay_mode, fullscreen):
 	evh = EventHandler(objects, shutdown)
 	evh.start()
 
-	gui = FlukeGUI(objects, evh, shutdown, fullscreen)
+	gui = CleanGUI(objects, evh, shutdown, fullscreen)
 	gui.start()
 
 	# Let the main sleep until everyone has acknowledged the shutdown
@@ -77,7 +77,8 @@ if __name__ == "__main__":
 	# Late import to acknowledge the debug flag
 	from components.canreader import CanReader
 	from components.eventhandler import EventHandler
-	from components.flukegui import FlukeGUI
+	#from components.flukegui import FlukeGUI
+	from components.cleangui import CleanGUI
 
 	# make stdin a non-blocking file
 	fd = sys.stdin.fileno()
