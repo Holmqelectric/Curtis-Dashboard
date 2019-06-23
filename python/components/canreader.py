@@ -11,9 +11,9 @@ tsparser = re.compile(r"\(([0-9]*.[0-9]*)\)")
 
 class CanReader(threading.Thread):
 
-	def __init__(self, objects, infile, shutdown, replay_mode):
+	def __init__(self, object, infile, shutdown, replay_mode):
 		super().__init__()
-		self.objects = objects
+		self.object = object
 		self.infile = infile
 		self.shutdown = shutdown
 		self.replaymode = replay_mode
@@ -27,38 +27,22 @@ class CanReader(threading.Thread):
 		sbytes = data.split("#")
 
 		if data.startswith("1A6"):
-			m1a6 = self.objects[0]
-			m1a6.parse(sbytes[1])
-			#print(m1a6)
-			return m1a6
+			self.object.parse_m1(sbytes[1])
 
 		elif data.startswith("2A6"):
-			m2a6 = self.objects[1]
-			m2a6.parse(sbytes[1])
-			#print(m2a6)
-			return m2a6
+			self.object.parse_m2(sbytes[1])
 
 		elif data.startswith("3A6"):
-			m3a6 = self.objects[2]
-			m3a6.parse(sbytes[1])
-			#print(m3a6)
-			return m3a6
+			self.object.parse_m3(sbytes[1])
 
 		elif data.startswith("4A6"):
-			m4a6 = self.objects[3]
-			m4a6.parse(sbytes[1])
-			#print(m4a6)
-			return m4a6
+			self.object.parse_m4(sbytes[1])
 
 		elif data.startswith("726"):
 			pass
-			#print("")
-			#print("---------------------------")
-			#print("")
 		else:
 			print("UNKNOWN CAN DATA")
 
-		return None
 
 	def run(self):
 

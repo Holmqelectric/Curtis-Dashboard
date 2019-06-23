@@ -20,8 +20,8 @@ IMAGE_DIR = "images-fluke"
 
 class FlukeGUI(BaseGUI):
 
-	def __init__(self, objects, event_handler, shutdown, fullscreen):
-		super(FlukeGUI, self).__init__(objects, shutdown, fullscreen)
+	def __init__(self, states, event_handler, shutdown, fullscreen):
+		super(FlukeGUI, self).__init__(states, shutdown, fullscreen)
 
 		self.event_handler = event_handler
 
@@ -74,7 +74,9 @@ class FlukeGUI(BaseGUI):
 
 	def draw_battery(self):
 
-		image_index = int((self.objects[0].dc_capacitor_voltage / 150.0)*6) - 1
+		soc = self.states.get_soc_percent()
+		image_index = int(soc * 6)
+
 		if image_index > 5:
 			image_index = 5
 
@@ -86,7 +88,7 @@ class FlukeGUI(BaseGUI):
 
 	def draw_power(self):
 
-		power = max(self.objects[1].motor_power, 0)
+		power = self.states.get_motor_power()
 		needle = pygame.transform.rotozoom(self.powerneedle, -power*(160.0/70.0), 1.0)
 		pos = needle.get_rect()
 		pos.centerx = 503
@@ -95,7 +97,7 @@ class FlukeGUI(BaseGUI):
 
 	def draw_speed(self):
 
-		speed = self.objects[0].get_speed()
+		speed = self.states.get_speed()
 		needle = pygame.transform.rotozoom(self.speedneedle, -speed*(180.0/160.0), 1.0)
 		pos = needle.get_rect()
 		pos.centerx = 399
@@ -135,39 +137,39 @@ class FlukeGUI(BaseGUI):
 			self.show_full_image(self.warning_signal_img)
 
 	def print_rpm(self):
-		rpm = max(self.objects[0].actual_speed, 0)
+		rpm = self.states.get_actual_speed()
 		self.draw_text(self.screen, str(rpm), 60, (20, 217))
 
 	def print_power(self):
-		power = max(self.objects[1].motor_power, 0)
+		power = self.states.get_motor_power()
 		self.draw_text(self.screen, "%.01f" % power, 60, (20, 325))
 
 	def print_current(self):
-		current = int(max(self.objects[0].motor_rms_current, 0))
+		current = self.states.get_motor_rms_current()
 		self.draw_text(self.screen, str(current), 60, (20, 107))
 
 	def print_battery_voltage(self):
-		voltage = max(self.objects[0].dc_capacitor_voltage, 0)
+		voltage = self.states.get_dc_capacitor_voltage()
 		self.draw_text(self.screen, "%.0f" % voltage, 30, (590, 109))
 
 	def print_range(self):
-		range = max(self.objects[2].odometer, 0)
+		range = self.states.get_odometer()
 		self.draw_text(self.screen, "%.0f" % range, 60, (635, 322), topright=True)
 
 	def print_odometer(self):
-		odometer = max(self.objects[2].odometer, 0)
+		odometer = self.states.get_odometer()
 		self.draw_text(self.screen, "%.0f" % odometer, 45, (754, 430), topright=True)
 
 	def print_ctrl_temp(self):
-		temp = max(self.objects[1].controller_temp, 0)
+		temp = self.states.get_controller_temp()
 		self.draw_text(self.screen, "%.0f" % temp, 45, (527, 430), topright=True)
 
 	def print_motor_temp(self):
-		temp = max(self.objects[1].motor_temp, 0)
+		temp = self.states.get_motor_temp()
 		self.draw_text(self.screen, "%.0f" % temp, 45, (304, 430), topright=True)
 
 	def print_dcdc(self):
-		dcdc = max(self.objects[3].dcdc, 0)
+		dcdc = self.states.get_dcdc()
 		self.draw_text(self.screen, "%.01f" % dcdc, 45, (120, 430), topright=True)
 
 

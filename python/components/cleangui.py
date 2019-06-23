@@ -28,8 +28,8 @@ BOTTOM_BORDER = 430
 
 class CleanGUI(BaseGUI):
 
-	def __init__(self, objects, event_handler, shutdown, fullscreen):
-		super(CleanGUI, self).__init__(objects, shutdown, fullscreen)
+	def __init__(self, states, event_handler, shutdown, fullscreen):
+		super(CleanGUI, self).__init__(states, shutdown, fullscreen)
 
 		self.event_handler = event_handler
 
@@ -82,9 +82,13 @@ class CleanGUI(BaseGUI):
 
 	def draw_battery(self):
 
-		image_index = int((self.objects[0].dc_capacitor_voltage / 150.0)*8) - 1
-		if image_index > 8:
-			image_index = 8
+		soc = self.states.get_soc_percent()
+		image_index = int(soc*8)
+
+		#print("Soc:", soc)
+
+		if image_index > 7:
+			image_index = 7
 
 		if image_index < 0:
 			return
@@ -97,7 +101,7 @@ class CleanGUI(BaseGUI):
 		one_rot = 42.5
 		offset = 31.0
 
-		power = max(self.objects[1].motor_power, 0.0) - offset
+		power = self.states.get_motor_power() - offset
 
 		needle = pygame.transform.rotozoom(self.powerneedle, -power*(180.0/one_rot), 1.0)
 		pos = needle.get_rect()
@@ -113,7 +117,7 @@ class CleanGUI(BaseGUI):
 		# Speed zero offset in km/h
 		offset = 135.0
 
-		speed = self.objects[0].get_speed() - offset
+		speed = self.states.get_speed() - offset
 		needle = pygame.transform.rotozoom(self.speedneedle, -speed*(180.0/(one_rotation)), 1.0)
 		pos = needle.get_rect()
 		pos.centerx = 399
@@ -156,15 +160,15 @@ class CleanGUI(BaseGUI):
 	#
 
 	def print_current(self):
-		current = int(max(self.objects[0].motor_rms_current, 0))
+		current = self.states.get_motor_rms_current()
 		self.draw_text(self.screen, str(current), G1_SIZE, (LEFT_BORDER, 155))
 
 	def print_rpm(self):
-		rpm = max(self.objects[0].actual_speed, 0)
+		rpm = self.states.get_actual_speed()
 		self.draw_text(self.screen, str(rpm), G1_SIZE, (LEFT_BORDER, 235))
 
 	def print_power(self):
-		power = max(self.objects[1].motor_power, 0)
+		power = self.states.get_motor_power()
 		self.draw_text(self.screen, "%.01f" % power, G1_SIZE, (LEFT_BORDER, 315))
 
 
@@ -173,11 +177,11 @@ class CleanGUI(BaseGUI):
 	#
 
 	def print_battery_voltage(self):
-		voltage = max(self.objects[0].dc_capacitor_voltage, 0)
+		voltage = self.states.get_dc_capacitor_voltage()
 		self.draw_text(self.screen, "%.0f" % voltage, G2_SIZE, (608, 184))
 
 	def print_range(self):
-		range = max(self.objects[2].odometer, 0)
+		range =self.states.get_odometer()
 		self.draw_text(self.screen, "%.0f" % range, 60, (635, 322), topright=True)
 
 
@@ -186,19 +190,19 @@ class CleanGUI(BaseGUI):
 	#
 
 	def print_dcdc(self):
-		dcdc = max(self.objects[3].dcdc, 0)
+		dcdc = self.states.get_dcdc()
 		self.draw_text(self.screen, "%.01f" % dcdc, G2_SIZE, (148, BOTTOM_BORDER), topright=True)
 
 	def print_motor_temp(self):
-		temp = max(self.objects[1].motor_temp, 0)
+		temp = self.states.get_motor_temp()
 		self.draw_text(self.screen, "%.0f" % temp, G2_SIZE, (340, BOTTOM_BORDER), topright=True)
 
 	def print_ctrl_temp(self):
-		temp = max(self.objects[1].controller_temp, 0)
+		temp = self.states.get_controller_temp()
 		self.draw_text(self.screen, "%.0f" % temp, G2_SIZE, (528, BOTTOM_BORDER), topright=True)
 
 	def print_odometer(self):
-		odometer = max(self.objects[2].odometer, 0)
+		odometer = self.states.get_odometer()
 		self.draw_text(self.screen, "%.0f" % odometer, G2_SIZE, (714, BOTTOM_BORDER), topright=True)
 
 

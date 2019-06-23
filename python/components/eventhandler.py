@@ -96,7 +96,7 @@ class EventHandler(threading.Thread):
 
 	def __init__(self, objects, shutdown, replay_mode=True):
 		super().__init__()
-		self.objects = objects
+		#self.objects = objects
 		self.shutdown = shutdown
 		GPIO.setmode(GPIO.BOARD)
 

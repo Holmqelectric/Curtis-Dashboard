@@ -3,16 +3,12 @@
 
 import fcntl
 import sys
-import os
 import signal
 import argparse
-import time
 
 from threading import Event
 
-from components.settings import DashboardSettings as DS
 from components.messages import *
-
 
 # Global semaphore that makes all threads quit
 shutdown = Event()
@@ -22,20 +18,28 @@ def run(infile, replay_mode, fullscreen):
 
 	global shutdown
 
-	objects = [Msg_1a6(), Msg_2a6(), Msg_3a6(), Msg_4a6()]
+	states = StateData()
 
-	c = CanReader(objects, infile, shutdown, replay_mode)
+	c = CanReader(states, infile, shutdown, replay_mode)
 	c.start()
 
-	evh = EventHandler(objects, shutdown)
+	evh = EventHandler(states, shutdown)
 	evh.start()
 
-	gui = GUI(objects, evh, shutdown, fullscreen)
+	gui = GUI(states, evh, shutdown, fullscreen)
 	gui.start()
+
+	store_counter = DS.STORE_STATE_INTERVAL
 
 	# Let the main sleep until everyone has acknowledged the shutdown
 	while not shutdown.is_set():
+
 		time.sleep(0.1)
+
+		store_counter -= 1
+		if store_counter <= 0:
+			states.dump_states()
+			store_counter = DS.STORE_STATE_INTERVAL
 
 	c.join()
 	evh.join()

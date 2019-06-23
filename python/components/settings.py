@@ -8,7 +8,8 @@ class DashboardSettings(object):
 	SOFT_TURN_SIGNAL_MAX = 4
 	HARD_TURN_SIGNAL_LIMIT = 3
 
-	BATTERY_TOTAL_ENERGY = 12*1000.0
+	BATTERY_TOTAL_ENERGY = 11.0*60*60 # kW seconds
+	STORE_STATE_INTERVAL = 600 # Nr. seconds * 10
 
 	#
 	# PiCAN reserved pins

@@ -10,11 +10,11 @@ import numpy
 class BaseGUI(threading.Thread):
 	#DEFAULT_FONT = "Noto Mono"
 
-	def __init__(self, objects, shutdown, fullscreen):
+	def __init__(self, states, shutdown, fullscreen):
 		super().__init__()
 		size = (800, 480)
 
-		self.objects = objects
+		self.states = states
 		self.shutdown = shutdown
 		self.fullscreen = fullscreen
 
