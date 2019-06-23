@@ -8,7 +8,7 @@ import numpy
 
 
 class BaseGUI(threading.Thread):
-	DEFAULT_FONT = "Noto Mono"
+	#DEFAULT_FONT = "Noto Mono"
 
 	def __init__(self, objects, shutdown, fullscreen):
 		super().__init__()
@@ -95,14 +95,17 @@ class BaseGUI(threading.Thread):
 				fn_line(surface, color, (col, y1), (col, y2))
 
 	@staticmethod
-	def draw_text(scr, text, size, pos, color=(255, 255, 255), font=DEFAULT_FONT, topright=False):
+	def draw_text(scr, text, size, pos, font, color=(255, 255, 255), topright=False):
 
 		tfont = pygame.font.SysFont(font, size)
+		#tfont = pygame.freetype.Font(font, size)
+		#tfont.kerning = True
 		text_bitmap = tfont.render(text, 1, color)
 		if topright:
 			rect = text_bitmap.get_rect()
 			rect.topright = pos
 			pos = rect
+
 		scr.blit(text_bitmap, pos)
 
 	@staticmethod
