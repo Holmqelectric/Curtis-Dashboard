@@ -117,7 +117,7 @@ class CleanGUI(BaseGUI):
 		# Speed zero offset in km/h
 		offset = 135.0
 
-		speed = self.states.get_speed() - offset
+		speed = self.states.get_speed_kmh() - offset
 		needle = pygame.transform.rotozoom(self.speedneedle, -speed*(180.0/(one_rotation)), 1.0)
 		pos = needle.get_rect()
 		pos.centerx = 399
@@ -181,8 +181,8 @@ class CleanGUI(BaseGUI):
 		self.draw_text(self.screen, "%.0f" % voltage, G2_SIZE, (608, 184))
 
 	def print_range(self):
-		range =self.states.get_odometer()
-		self.draw_text(self.screen, "%.0f" % range, 60, (635, 322), topright=True)
+		range =self.states.get_range()/1000.0
+		self.draw_text(self.screen, "%.0f" % range, G2_SIZE, (608, 270))
 
 
 	#
@@ -227,7 +227,7 @@ class CleanGUI(BaseGUI):
 			self.print_power()
 			self.print_current()
 			self.print_battery_voltage()
-			#self.print_range()
+			self.print_range()
 			self.print_odometer()
 			self.print_ctrl_temp()
 			self.print_motor_temp()

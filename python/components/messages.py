@@ -36,13 +36,28 @@ def parse_signed_int(data, start, length):
 class DumpStates(object):
 	def __init__(self):
 		self.energy_state = 0.0
+		self.distance_state = 0.0
+		self.old_energy_state = 0.0
+		self.old_distance_state = 0.0
+
+	def put_states(self, o):
+		o.energy_state = self.energy_state
+		o.old_energy_state = self.old_energy_state
+		o.distance_state = self.distance_state
+		o.old_distance_state = self.old_distance_state
+
+	def get_states(self, o):
+		self.energy_state = o.energy_state
+		self.old_energy_state = o.old_energy_state
+		self.distance_state = o.distance_state
+		self.old_distance_state = o.old_distance_state
 
 
 class StateData(object):
 	# ("Motor Cogwheel Diameter" / "Rear Cogwheel Diameter") *
 	#   "Rear Wheel Circumfence" *
 	#   ("Minutes in an hour" / "Meters in a kilometer")
-	GEARBOX_AND_WHEEL_RATIO = (24.0 / 144.0) * 2.040 * (60.0 / 1000.0)
+	GEARBOX_AND_WHEEL_RATIO = (24.0 / 144.0) * 2.040
 
 	STATES = ["Open", "Precharge", "Weld Check", "Closing Delay", "Missing Check",
 	"Closed (When Main Enable = On)", "Delay", "Arc Check", "Open Delay", "Fault",
@@ -69,7 +84,15 @@ class StateData(object):
 		self.dcdc = 0
 
 		self.mp_update_time = None
+		self.as_update_time = None
+
 		self.energy_state = DS.BATTERY_TOTAL_ENERGY
+		self.distance_state = 0.0
+
+		self.old_energy_state = DS.BATTERY_TOTAL_ENERGY
+		self.old_distance_state = 0.0
+
+		self.range = 110000.0
 
 		self.write_lock = threading.Lock()
 
@@ -79,12 +102,24 @@ class StateData(object):
 
 		self.write_lock.acquire()
 		self.motor_rms_current = int(parse_unsigned_int(data, 0, 16) / 10.0)
-		self.actual_speed = parse_signed_int(data, 16, 16)
 		self.battery_current = int(parse_signed_int(data, 32, 16) / 10.0)
 		self.dc_capacitor_voltage = (parse_unsigned_int(data, 48, 16) / 64.0)
 
 		if self.dc_capacitor_voltage >= 168.0:
 			self.energy_state = DS.BATTERY_TOTAL_ENERGY
+			self.distance_state = 0.0
+
+		actual_speed = parse_signed_int(data, 16, 16)
+
+		t = time.time()
+		if self.as_update_time is not None:
+			dt = t - self.as_update_time
+			speed = (self.__get_speed(actual_speed) + self.__get_speed(self.actual_speed))/2.0
+			self.distance_state += speed*dt
+
+		self.as_update_time = t
+		self.actual_speed = actual_speed
+
 		self.write_lock.release()
 
 	def parse_m2(self, data):
@@ -101,7 +136,7 @@ class StateData(object):
 
 		self.status = parse_unsigned_int(data, 40, 8)
 
-		motor_power = parse_signed_int(data, 48, 16) / 10.0
+		motor_power = parse_signed_int(data, 48, 16) * 100.0
 
 		t = time.time()
 		if self.mp_update_time is not None:
@@ -131,7 +166,7 @@ class StateData(object):
 		self.write_lock.acquire()
 		f = open(STATE_PICKLE_PATH, 'wb')
 		o = DumpStates()
-		o.energy_state = self.energy_state
+		o.get_states(self)
 
 		pickle.dump(o, f, pickle.HIGHEST_PROTOCOL)
 
@@ -143,26 +178,30 @@ class StateData(object):
 		if os.path.isfile(STATE_PICKLE_PATH):
 			f = open(STATE_PICKLE_PATH, 'rb')
 			o = pickle.load(f)
-
-			self.energy_state = o.energy_state
+			o.put_states(self)
 			f.close()
 
 
-	def get_speed(self):
-		rpm = self.actual_speed
-
+	# Returns speed in 'meters per second'
+	def __get_speed(self, rpm):
 		if rpm > 1.0:
-			speed = self.GEARBOX_AND_WHEEL_RATIO * rpm * 1.01
+			speed = (self.GEARBOX_AND_WHEEL_RATIO * rpm * 1.01) / 60.0
 		else:
 			speed = 0.0
 
 		return speed
 
+	def get_speed_kmh(self):
+		return self.__get_speed(self.actual_speed) * (3600.0 / 1000.0)
+
+	def get_speed_ms(self):
+		return self.__get_speed(self.actual_speed)
+
 	def get_dc_capacitor_voltage(self):
 		return self.dc_capacitor_voltage
 
 	def get_motor_power(self):
-		return max(self.motor_power, 0.0)
+		return max(self.motor_power, 0.0)/1000.0
 
 	def get_actual_speed(self):
 		return max(self.actual_speed, 0)
@@ -185,6 +224,22 @@ class StateData(object):
 	def get_soc_percent(self):
 		return self.energy_state/DS.BATTERY_TOTAL_ENERGY
 
+	def get_range(self):
+
+		dE = self.old_energy_state - self.energy_state
+		dS = self.distance_state - self.old_distance_state
+
+		if dS < 10.0 or dE < 10.0:
+			return 110000.0
+
+		print("Batt state", self.energy_state, self.old_energy_state)
+		print("Dist state", self.distance_state, self.old_distance_state)
+		print("dE:", dE, "dS:", dS, "dE/dS", (dE/dS), (self.energy_state/dE)*dS)
+
+		x = (self.energy_state/dE)*dS
+		self.range = (10*self.range + x)/11.0
+
+		return self.range
 
 	def __str__(self):
 
