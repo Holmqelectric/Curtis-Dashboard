@@ -8,7 +8,7 @@ class DashboardSettings(object):
 	SOFT_TURN_SIGNAL_MAX = 4
 	HARD_TURN_SIGNAL_LIMIT = 3
 
-	BATTERY_TOTAL_ENERGY = 11.0*60*60 # kW seconds
+	BATTERY_TOTAL_ENERGY = 11000*60*60 # W seconds
 	STORE_STATE_INTERVAL = 600 # Nr. seconds * 10
 
 	#
