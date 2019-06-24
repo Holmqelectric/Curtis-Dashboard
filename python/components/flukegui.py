@@ -97,7 +97,7 @@ class FlukeGUI(BaseGUI):
 
 	def draw_speed(self):
 
-		speed = self.states.get_speed()
+		speed = self.states.get_speed_kmh()
 		needle = pygame.transform.rotozoom(self.speedneedle, -speed*(180.0/160.0), 1.0)
 		pos = needle.get_rect()
 		pos.centerx = 399
