@@ -136,7 +136,7 @@ class StateData(object):
 
 		self.status = parse_unsigned_int(data, 40, 8)
 
-		motor_power = parse_signed_int(data, 48, 16) * 100.0
+		motor_power = parse_signed_int(data, 48, 16) * 10.0
 
 		t = time.time()
 		if self.mp_update_time is not None:
