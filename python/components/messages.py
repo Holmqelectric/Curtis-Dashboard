@@ -232,10 +232,6 @@ class StateData(object):
 		if dS < 10.0 or dE < 10.0:
 			return 110000.0
 
-		print("Batt state", self.energy_state, self.old_energy_state)
-		print("Dist state", self.distance_state, self.old_distance_state)
-		print("dE:", dE, "dS:", dS, "dE/dS", (dE/dS), (self.energy_state/dE)*dS)
-
 		x = (self.energy_state/dE)*dS
 		self.range = (10*self.range + x)/11.0
 
