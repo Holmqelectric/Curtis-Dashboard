@@ -190,6 +190,14 @@ class CleanGUI(BaseGUI):
 		self.draw_text(self.screen, "%.0f %%" % soc, G3_SIZE, (730, 290), topright=True)
 
 	#
+	# Center values
+	#
+	def print_speed(self):
+		speed = self.states.get_speed_kmh()
+		self.draw_text(self.screen, "%.0f" % speed, G1_SIZE, (420, 180), topright=True)
+
+
+	#
 	# Bottom values
 	#
 
@@ -238,6 +246,7 @@ class CleanGUI(BaseGUI):
 			self.print_dcdc()
 
 			self.print_battery_percent()
+			self.print_speed()
 
 			pygame.display.flip()
 
