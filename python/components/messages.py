@@ -217,7 +217,7 @@ class StateData(object):
 		self.dc_capacitor_voltage = (parse_unsigned_int(data, 48, 16) / 64.0)
 
 		# Reset available energy in battery if voltage is high
-		if self.dc_capacitor_voltage >= 166.0:
+		if self.dc_capacitor_voltage >= 168.0:
 			self.energy_state = DS.BATTERY_TOTAL_ENERGY
 
 		actual_speed = parse_signed_int(data, 16, 16)
