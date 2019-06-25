@@ -22,6 +22,7 @@ IMAGE_DIR = "images-clean"
 
 G1_SIZE = 28
 G2_SIZE = 24
+G3_SIZE = 10
 
 LEFT_BORDER = 64
 BOTTOM_BORDER = 430
@@ -184,6 +185,9 @@ class CleanGUI(BaseGUI):
 		range =self.states.get_range()/1000.0
 		self.draw_text(self.screen, "%.0f" % range, G2_SIZE, (608, 270))
 
+	def print_battery_percent(self):
+		soc = self.states.get_soc_percent()*100.0
+		self.draw_text(self.screen, "%.0f %%" % soc, G3_SIZE, (730, 290), topright=True)
 
 	#
 	# Bottom values
@@ -232,6 +236,8 @@ class CleanGUI(BaseGUI):
 			self.print_ctrl_temp()
 			self.print_motor_temp()
 			self.print_dcdc()
+
+			self.print_battery_percent()
 
 			pygame.display.flip()
 
