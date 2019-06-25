@@ -8,7 +8,9 @@ import os
 
 from components.settings import DashboardSettings as DS
 
-STATE_PICKLE_PATH = "/tmp/state.pickle"
+path = os.path.dirname(os.path.realpath(__file__))
+
+STATE_PICKLE_PATH = "%s/../../state.pickle" % (path)
 
 def parse_unsigned_int(data, start, length):
 	sbyte = int(start / 4)
@@ -33,25 +35,122 @@ def parse_signed_int(data, start, length):
 
 	return signed_val
 
+#
+# Class for disk storage
+#
 class DumpStates(object):
 	def __init__(self):
 		self.energy_state = 0.0
-		self.distance_state = 0.0
-		self.old_energy_state = 0.0
-		self.old_distance_state = 0.0
+		self.consumption = ConsumptionData()
 
 	def put_states(self, o):
 		o.energy_state = self.energy_state
-		o.old_energy_state = self.old_energy_state
-		o.distance_state = self.distance_state
-		o.old_distance_state = self.old_distance_state
+		o.consumption = self.consumption
 
 	def get_states(self, o):
 		self.energy_state = o.energy_state
-		self.old_energy_state = o.old_energy_state
-		self.distance_state = o.distance_state
-		self.old_distance_state = o.old_distance_state
+		self.consumption = o.consumption
 
+#
+# Simple fixed size rotating list
+#
+class RotatingList(object):
+
+	def __init__(self, size):
+		self.index = 0
+		self.data = [(0.0, 0.0)]*size
+
+	def append(self, value):
+		self.data[self.index] = value
+		self.index += 1
+		if self.index >= len(self.data):
+			self.index = 0
+
+class ConsumptionData(object):
+	def __init__(self):
+		#
+		# Three layers of data storage.
+		# - High frequency
+		# - Seconds
+		# - Minutes
+		#
+		self.hfdata = []
+		self.hfreset = None
+		self.sdata = []
+		self.mdata = RotatingList(10)
+
+		# Simple calculation caching
+		self.added = True
+		self.calculated = 0.0
+
+	def append(self, power, speed, dt):
+
+		#
+		# Add all data to the High Frequency list if speed is big enough
+		#
+		if speed < 1.0:
+			return
+
+		self.hfdata.append((power*dt, speed * dt))
+
+		t = time.time()
+
+		# If this is the first element, then only set timestamp
+		if self.hfreset is None:
+			self.hfreset = t
+			return
+
+		#
+		# Calculate average of HF-list each second and put in second list
+		#
+		if (self.hfreset + 1.0) < t and len(self.hfdata) > 0:
+			# Sum column wise
+			te, td = map(sum, zip(*self.hfdata))
+
+			# Add data and clear previous
+			self.sdata.append((te, td))
+			self.hfdata = []
+			self.hfreset = t
+
+		#
+		# When we have a full minute, copy over average to minute list
+		# Minute list contains a fixed set of minutes.
+		#
+		if len(self.sdata) > 60:
+
+			te, td = map(sum, zip(*self.sdata))
+
+			self.mdata.append((te, td))
+			self.added = True
+			self.sdata = []
+
+			# DEBUG
+			ss = ", ".join([ "%.0f:%.0f" % (e,d) for e,d in self.mdata.data])
+			te, td = map(sum, zip(*self.mdata.data))
+			te += 1.0
+			td += 1.0
+
+			print("Consuption list:", ss)
+			print("Avg consumption:", "%.01f" % (te/td))
+
+
+	def get_consumption(self):
+
+		if not self.added:
+			return self.calculated
+
+		self.added = False
+
+		# Sum tuples, column by column
+		te, td = map(sum, zip(*self.mdata.data))
+
+		# Return default consumption if we haven't gathered enough values
+		if te == 0.0 or td == 0.0:
+			self.calculated = 300.0
+		else:
+			self.calculated = te/td
+
+		return self.calculated
 
 class StateData(object):
 	# ("Motor Cogwheel Diameter" / "Rear Cogwheel Diameter") *
@@ -64,16 +163,19 @@ class StateData(object):
 	"Closed (When Main Enable = Off)"]
 
 	def __init__(self):
+		#
+		# CAN data variables
+		#
 		self.motor_rms_current = 0
 		self.actual_speed = 0
 		self.battery_current = 0
-		self.dc_capacitor_voltage = 0
+		self.dc_capacitor_voltage = 0.0
 
 		self.motor_temp = 0
 		self.controller_temp = 0
 		self.sstate = "N/A"
 		self.status = 0
-		self.motor_power = 0
+		self.motor_power = 0.0
 
 		self.error_code = 0
 		self.vehicle_acc = 0
@@ -83,39 +185,43 @@ class StateData(object):
 		self.tts_2 = 0
 		self.dcdc = 0
 
+		#
+		# Update timestamps
+		#
 		self.mp_update_time = None
 		self.as_update_time = None
 
+		#
+		# Current enery and consumption data
+		#
 		self.energy_state = DS.BATTERY_TOTAL_ENERGY
-		self.distance_state = 0.0
-
-		self.old_energy_state = DS.BATTERY_TOTAL_ENERGY
-		self.old_distance_state = 0.0
-
-		self.range = 110000.0
+		self.consumption = ConsumptionData()
 
 		self.write_lock = threading.Lock()
 
+		# Load data stored on disk
 		self.load_states()
 
 	def parse_m1(self, data):
 
 		self.write_lock.acquire()
+
 		self.motor_rms_current = int(parse_unsigned_int(data, 0, 16) / 10.0)
 		self.battery_current = int(parse_signed_int(data, 32, 16) / 10.0)
 		self.dc_capacitor_voltage = (parse_unsigned_int(data, 48, 16) / 64.0)
 
-		if self.dc_capacitor_voltage >= 168.0:
+		# Reset available energy in battery if voltage is high
+		if self.dc_capacitor_voltage >= 166.0:
 			self.energy_state = DS.BATTERY_TOTAL_ENERGY
-			self.distance_state = 0.0
 
 		actual_speed = parse_signed_int(data, 16, 16)
 
+		# Store consumption data
 		t = time.time()
 		if self.as_update_time is not None:
 			dt = t - self.as_update_time
-			speed = (self.__get_speed(actual_speed) + self.__get_speed(self.actual_speed))/2.0
-			self.distance_state += speed*dt
+			speed = (self.get_speed_ms(actual_speed) + self.get_speed_ms())/2.0
+			self.consumption.append(self.motor_power, speed, dt)
 
 		self.as_update_time = t
 		self.actual_speed = actual_speed
@@ -138,6 +244,7 @@ class StateData(object):
 
 		motor_power = parse_signed_int(data, 48, 16) * 10.0
 
+		# Subtract used energy
 		t = time.time()
 		if self.mp_update_time is not None:
 			dt = t - self.mp_update_time
@@ -181,9 +288,10 @@ class StateData(object):
 			o.put_states(self)
 			f.close()
 
+	def get_speed_ms(self, rpm=None):
+		if rpm is None:
+			rpm = self.actual_speed
 
-	# Returns speed in 'meters per second'
-	def __get_speed(self, rpm):
 		if rpm > 1.0:
 			speed = (self.GEARBOX_AND_WHEEL_RATIO * rpm * 1.01) / 60.0
 		else:
@@ -192,10 +300,7 @@ class StateData(object):
 		return speed
 
 	def get_speed_kmh(self):
-		return self.__get_speed(self.actual_speed) * (3600.0 / 1000.0)
-
-	def get_speed_ms(self):
-		return self.__get_speed(self.actual_speed)
+		return self.get_speed_ms(self.actual_speed) * (3600.0 / 1000.0)
 
 	def get_dc_capacitor_voltage(self):
 		return self.dc_capacitor_voltage
@@ -226,16 +331,10 @@ class StateData(object):
 
 	def get_range(self):
 
-		dE = self.old_energy_state - self.energy_state
-		dS = self.distance_state - self.old_distance_state
+		cc = self.consumption.get_consumption()
+		range = self.energy_state/cc
 
-		if dS < 10.0 or dE < 10.0:
-			return 110000.0
-
-		x = (self.energy_state/dE)*dS
-		self.range = (10*self.range + x)/11.0
-
-		return self.range
+		return range
 
 	def __str__(self):
 
