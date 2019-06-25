@@ -94,5 +94,5 @@ if __name__ == "__main__":
 	fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
 	run(sys.stdin, args.run_replay, args.use_fullscreen)
-	#run_profile(sys.stdin, args.run_replay, args.use_fullscreen, args.use_mega)
+	#run_profile(sys.stdin, args.run_replay, args.use_fullscreen)
 

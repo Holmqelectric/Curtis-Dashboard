@@ -10,6 +10,7 @@ class DashboardSettings(object):
 
 	BATTERY_TOTAL_ENERGY = 11000*60*60 # W seconds
 	STORE_STATE_INTERVAL = 600 # Nr. seconds * 10
+	DEFAULT_ENERGY_CONSUMPTION = 300.0
 
 	#
 	# PiCAN reserved pins

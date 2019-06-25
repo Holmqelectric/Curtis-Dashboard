@@ -168,9 +168,9 @@ class CleanGUI(BaseGUI):
 		rpm = self.states.get_actual_speed()
 		self.draw_text(self.screen, str(rpm), G1_SIZE, (LEFT_BORDER, 235))
 
-	def print_power(self):
-		power = self.states.get_motor_power()
-		self.draw_text(self.screen, "%.01f" % power, G1_SIZE, (LEFT_BORDER, 315))
+	def print_consumption(self):
+		cons = self.states.get_consumption_kwh()
+		self.draw_text(self.screen, "%.01f" % cons, G1_SIZE, (LEFT_BORDER, 315))
 
 
 	#
@@ -194,8 +194,11 @@ class CleanGUI(BaseGUI):
 	#
 	def print_speed(self):
 		speed = self.states.get_speed_kmh()
-		self.draw_text(self.screen, "%.0f" % speed, G1_SIZE, (420, 180), topright=True)
+		self.draw_text(self.screen, "%.0f" % speed, G1_SIZE, (426, 187), topright=True)
 
+	def print_power(self):
+		power = self.states.get_motor_power()
+		self.draw_text(self.screen, "%.01f" % power, 20, (530, 260), topright=True)
 
 	#
 	# Bottom values
@@ -247,6 +250,7 @@ class CleanGUI(BaseGUI):
 
 			self.print_battery_percent()
 			self.print_speed()
+			self.print_consumption()
 
 			pygame.display.flip()
 

@@ -58,13 +58,20 @@ class RotatingList(object):
 
 	def __init__(self, size):
 		self.index = 0
-		self.data = [(0.0, 0.0)]*size
+		self.data = [(DS.DEFAULT_ENERGY_CONSUMPTION*1000.0, 1000.0)]*size
 
 	def append(self, value):
 		self.data[self.index] = value
 		self.index += 1
 		if self.index >= len(self.data):
 			self.index = 0
+
+	def get_latest(self):
+		index = self.index - 1
+		if index < 0:
+			index = len(self.data) - 1
+
+		return self.data[index]
 
 class ConsumptionData(object):
 	def __init__(self):
@@ -126,15 +133,13 @@ class ConsumptionData(object):
 
 			# DEBUG
 			ss = ", ".join([ "%.0f:%.0f" % (e,d) for e,d in self.mdata.data])
-			te, td = map(sum, zip(*self.mdata.data))
-			te += 1.0
-			td += 1.0
+			cons = self.get_avg_consumption()
 
 			print("Consuption list:", ss)
-			print("Avg consumption:", "%.01f" % (te/td))
+			print("Avg consumption:", "%.01f" % cons)
 
 
-	def get_consumption(self):
+	def get_avg_consumption(self):
 
 		if not self.added:
 			return self.calculated
@@ -144,13 +149,14 @@ class ConsumptionData(object):
 		# Sum tuples, column by column
 		te, td = map(sum, zip(*self.mdata.data))
 
-		# Return default consumption if we haven't gathered enough values
-		if te == 0.0 or td == 0.0:
-			self.calculated = 300.0
-		else:
-			self.calculated = te/td
+		self.calculated = te/td
 
 		return self.calculated
+
+	def get_latest_consumption(self):
+		e, d = self.mdata.get_latest()
+
+		return e/d
 
 class StateData(object):
 	# ("Motor Cogwheel Diameter" / "Rear Cogwheel Diameter") *
@@ -329,9 +335,12 @@ class StateData(object):
 	def get_soc_percent(self):
 		return self.energy_state/DS.BATTERY_TOTAL_ENERGY
 
+	def get_consumption_kwh(self):
+		return self.consumption.get_latest_consumption()/360.0
+
 	def get_range(self):
 
-		cc = self.consumption.get_consumption()
+		cc = self.consumption.get_avg_consumption()
 		range = self.energy_state/cc
 
 		return range
