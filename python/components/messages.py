@@ -90,7 +90,7 @@ class ConsumptionData(object):
 		self.added = True
 		self.calculated = 0.0
 
-	def append(self, power, speed, dt):
+	def append(self, energy_rate, speed, dt):
 
 		#
 		# Add all data to the High Frequency list if speed is big enough
@@ -98,7 +98,7 @@ class ConsumptionData(object):
 		if speed < 1.0:
 			return
 
-		self.hfdata.append((power*dt, speed * dt))
+		self.hfdata.append((energy_rate, speed * dt))
 
 		t = time.time()
 
@@ -160,8 +160,7 @@ class ConsumptionData(object):
 
 class StateData(object):
 	# ("Motor Cogwheel Diameter" / "Rear Cogwheel Diameter") *
-	#   "Rear Wheel Circumfence" *
-	#   ("Minutes in an hour" / "Meters in a kilometer")
+	#   "Rear Wheel Circumfence"
 	GEARBOX_AND_WHEEL_RATIO = (24.0 / 144.0) * 2.040
 
 	STATES = ["Open", "Precharge", "Weld Check", "Closing Delay", "Missing Check",
@@ -201,6 +200,7 @@ class StateData(object):
 		# Current enery and consumption data
 		#
 		self.energy_state = DS.BATTERY_TOTAL_ENERGY
+		self.energy_rate = 0.0
 		self.consumption = ConsumptionData()
 
 		self.write_lock = threading.Lock()
@@ -227,7 +227,7 @@ class StateData(object):
 		if self.as_update_time is not None:
 			dt = t - self.as_update_time
 			speed = (self.get_speed_ms(actual_speed) + self.get_speed_ms())/2.0
-			self.consumption.append(self.motor_power, speed, dt)
+			self.consumption.append(self.energy_rate, speed, dt)
 
 		self.as_update_time = t
 		self.actual_speed = actual_speed
@@ -255,7 +255,9 @@ class StateData(object):
 		if self.mp_update_time is not None:
 			dt = t - self.mp_update_time
 			power = (motor_power + self.motor_power)/2.0
-			self.energy_state -= power*dt
+			energy_rate = power*dt
+			self.energy_state -= energy_rate
+			self.energy_rate = energy_rate
 
 		self.mp_update_time = t
 		self.motor_power = motor_power
