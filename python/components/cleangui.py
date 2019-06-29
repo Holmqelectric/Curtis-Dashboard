@@ -18,6 +18,7 @@ if DS.DEBUG:
 #FONT_NAME = "Orator Std"
 #FONT_NAME = "PF Din Text Universal Thin"
 FONT_NAME = "Bitstream Vera Sans"
+TEXT_COLOR = (144, 226, 229)
 IMAGE_DIR = "images-clean"
 
 G1_SIZE = 28
@@ -26,6 +27,7 @@ G3_SIZE = 10
 
 LEFT_BORDER = 64
 BOTTOM_BORDER = 430
+RIGHT_BORDER = 608
 
 class CleanGUI(BaseGUI):
 
@@ -72,21 +74,10 @@ class CleanGUI(BaseGUI):
 		else:
 			return False
 
-	def draw_gauge(self, x, y, r, label, value, unit):
-
-		if value < 1.0:
-			value = 0.0
-
-		self.draw_text(self.screen, label, 10, (x-30, y-10), color=(180, 180, 180))
-		self.draw_text(self.screen, "%.01f" % value, 15, (x, y), topright=True)
-		self.draw_text(self.screen, unit, 15, (x+10, y))
-
 	def draw_battery(self):
 
 		soc = self.states.get_soc_percent()
 		image_index = int(soc*8)
-
-		#print("Soc:", soc)
 
 		if image_index > 7:
 			image_index = 7
@@ -134,7 +125,7 @@ class CleanGUI(BaseGUI):
 		img = img.convert_alpha()
 		return img
 
-	def draw_text(self, scr, text, size, pos, font=FONT_NAME, color=(144, 226, 229), topright=False):
+	def draw_text(self, scr, text, size, pos, font=FONT_NAME, color=TEXT_COLOR, topright=False):
 		super(CleanGUI, self).draw_shadow_text(scr, text, size, pos, font, color, topright)
 
 	def show_full_image(self, img):
@@ -179,11 +170,11 @@ class CleanGUI(BaseGUI):
 
 	def print_battery_voltage(self):
 		voltage = self.states.get_dc_capacitor_voltage()
-		self.draw_text(self.screen, "%.0f" % voltage, G2_SIZE, (608, 184))
+		self.draw_text(self.screen, "%.0f" % voltage, G2_SIZE, (RIGHT_BORDER, 184))
 
 	def print_range(self):
-		range =self.states.get_range()/1000.0
-		self.draw_text(self.screen, "%.0f" % range, G2_SIZE, (608, 270))
+		range = self.states.get_range()/1000.0
+		self.draw_text(self.screen, "%.0f" % range, G2_SIZE, (RIGHT_BORDER, 270))
 
 	def print_battery_percent(self):
 		soc = self.states.get_soc_percent()*100.0
