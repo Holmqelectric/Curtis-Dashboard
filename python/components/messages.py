@@ -256,7 +256,11 @@ class StateData(object):
 			dt = t - self.mp_update_time
 			power = (motor_power + self.motor_power)/2.0
 			energy_rate = power*dt
+
 			self.energy_state -= energy_rate
+			if self.energy_state < 0.0:
+				self.energy_state = 0.0
+
 			self.energy_rate = energy_rate
 
 		self.mp_update_time = t
