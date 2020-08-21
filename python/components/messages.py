@@ -161,7 +161,7 @@ class ConsumptionData(object):
 class StateData(object):
 	# ("Motor Cogwheel Diameter" / "Rear Cogwheel Diameter") *
 	#   "Rear Wheel Circumfence"
-	GEARBOX_AND_WHEEL_RATIO = (24.0 / 144.0) * 2.040
+	GEARBOX_AND_WHEEL_RATIO = (22.0 / 144.0) * 2.040
 
 	STATES = ["Open", "Precharge", "Weld Check", "Closing Delay", "Missing Check",
 	"Closed (When Main Enable = On)", "Delay", "Arc Check", "Open Delay", "Fault",
