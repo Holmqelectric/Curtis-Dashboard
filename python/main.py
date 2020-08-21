@@ -29,7 +29,7 @@ def run(infile, replay_mode, fullscreen):
 	gui = GUI(states, evh, shutdown, fullscreen)
 	gui.start()
 
-	store_counter = DS.STORE_STATE_INTERVAL
+	store_counter = 0
 
 	# Let the main sleep until everyone has acknowledged the shutdown
 	while not shutdown.is_set():
